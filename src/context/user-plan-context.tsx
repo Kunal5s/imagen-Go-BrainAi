@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 export interface PlanPurchase {
   id: string;
@@ -16,6 +18,7 @@ export interface User {
   dailyCredits: number;
   planHistory: PlanPurchase[];
   lastLoginDate: string; // YYYY-MM-DD
+  dailyCreditResetHistory: string[];
 }
 
 interface UserPlanContextType {
@@ -24,6 +27,7 @@ interface UserPlanContextType {
   totalCredits: number;
   purchasedCredits: number;
   isPlanModalOpen: boolean;
+  isFreeTierExhausted: boolean;
   login: (email: string) => void;
   logout: () => void;
   purchasePlan: (planName: string, credits: number) => void;
@@ -36,6 +40,7 @@ interface UserPlanContextType {
 const UserPlanContext = createContext<UserPlanContextType | undefined>(undefined);
 
 const FREE_DAILY_CREDITS = 10;
+const FREE_TIER_RESET_LIMIT = 6;
 const PLAN_TIERS: { [key: string]: number } = {
     'Free': 0,
     'Booster Pack': 1,
@@ -79,15 +84,16 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
         dailyCredits: FREE_DAILY_CREDITS,
         planHistory: [],
         lastLoginDate: today,
+        dailyCreditResetHistory: [today],
       };
     } else {
-       // Backward compatibility: Ensure planHistory exists and items have remainingCredits
+       // Backward compatibility
       userData.planHistory = (userData.planHistory || []).map(p => ({
         ...p,
         remainingCredits: p.remainingCredits ?? p.creditsAdded
       }));
+      userData.dailyCreditResetHistory = userData.dailyCreditResetHistory || [];
        
-      // Migrate old top-level credits to a booster pack for backward compatibility
       if ((userData as any).credits > 0) {
         userData.planHistory.push({
           id: uuidv4(),
@@ -99,9 +105,21 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
         delete (userData as any).credits;
       }
 
-      // Reset daily credits if it's a new day
+      // Reset daily credits if it's a new day, subject to limits
       if (userData.lastLoginDate !== today) {
-        userData.dailyCredits = FREE_DAILY_CREDITS;
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const recentResets = userData.dailyCreditResetHistory.filter(dateStr => new Date(dateStr) >= thirtyDaysAgo);
+        
+        if (recentResets.length < FREE_TIER_RESET_LIMIT) {
+          userData.dailyCredits = FREE_DAILY_CREDITS;
+          if (!userData.dailyCreditResetHistory.includes(today)) {
+              userData.dailyCreditResetHistory.push(today);
+          }
+        } else {
+          userData.dailyCredits = 0;
+        }
         userData.lastLoginDate = today;
       }
     }
@@ -155,12 +173,13 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     updateUserInStorage(updatedUser);
   };
 
-  const { activePlan, purchasedCredits, totalCredits } = useMemo(() => {
+  const { activePlan, purchasedCredits, totalCredits, isFreeTierExhausted } = useMemo(() => {
     if (!user) {
         return {
             activePlan: { name: 'Free', tier: 0 },
             purchasedCredits: 0,
             totalCredits: 0,
+            isFreeTierExhausted: false,
         };
     }
 
@@ -181,11 +200,17 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
         name: highestTierPlan.planName,
         tier: PLAN_TIERS[highestTierPlan.planName]
     };
+    
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentResets = (user.dailyCreditResetHistory || []).filter(dateStr => new Date(dateStr) >= thirtyDaysAgo);
+    const freeTierExhausted = recentResets.length >= FREE_TIER_RESET_LIMIT && planDetails.tier < 2;
 
     return {
         activePlan: planDetails,
         purchasedCredits: currentPurchasedCredits,
-        totalCredits: user.dailyCredits + currentPurchasedCredits
+        totalCredits: user.dailyCredits + currentPurchasedCredits,
+        isFreeTierExhausted: freeTierExhausted,
     };
   }, [user]);
   
@@ -230,13 +255,13 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
   const getCreditCost = (quality: string): number => {
     if (quality === 'uhd') return 20;
     if (quality === 'hd') return 10;
-    return 2;
+    return 2; // Standard and Booster Pack cost
   };
 
   const openPlanModal = () => setPlanModalOpen(true);
 
   return (
-    <UserPlanContext.Provider value={{ user, activePlan, totalCredits, purchasedCredits, isPlanModalOpen, login, logout, purchasePlan, deductCredits, getCreditCost, setPlanModalOpen, openPlanModal }}>
+    <UserPlanContext.Provider value={{ user, activePlan, totalCredits, purchasedCredits, isPlanModalOpen, isFreeTierExhausted, login, logout, purchasePlan, deductCredits, getCreditCost, setPlanModalOpen, openPlanModal }}>
       {children}
     </UserPlanContext.Provider>
   );

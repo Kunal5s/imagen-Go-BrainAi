@@ -28,8 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Image as ImageIcon, Sparkles, Wand2, Aperture, Ratio, Smile, Sun, Palette, Medal, Loader2, Star, AlertTriangle } from 'lucide-react';
@@ -37,7 +35,6 @@ import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { generateImages } from "@/ai/flows/image-generation-flow";
 import { useUserPlan } from '@/context/user-plan-context';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
@@ -78,7 +75,7 @@ const getAspectRatioClass = (ratio: string) => {
 export default function ImageGenerator() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, totalCredits, getCreditCost, deductCredits, activePlan, openPlanModal } = useUserPlan();
+  const { user, totalCredits, getCreditCost, deductCredits, activePlan, openPlanModal, isFreeTierExhausted } = useUserPlan();
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -119,6 +116,15 @@ export default function ImageGenerator() {
             variant: "destructive"
         });
         openPlanModal();
+        return;
+    }
+
+    if (isFreeTierExhausted) {
+        toast({
+            title: "Free Tier Exhausted",
+            description: "You have used all your free daily credits for this 30-day period. Please upgrade to a paid plan.",
+            variant: "destructive"
+        });
         return;
     }
 
@@ -370,7 +376,7 @@ export default function ImageGenerator() {
                         Cost for {IMAGES_PER_GENERATION} images at {qualityValue} quality
                     </p>
                 </div>
-              <Button type="submit" disabled={isLoading || !hasSufficientCredits} size="lg">
+              <Button type="submit" disabled={isLoading || !hasSufficientCredits || isFreeTierExhausted} size="lg">
                 {isLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -427,6 +433,13 @@ export default function ImageGenerator() {
                     <p className="text-sm">Please log in to generate images and use your credits.</p>
                     <Button onClick={openPlanModal} className="mt-4">Login</Button>
                  </>
+              ) : isFreeTierExhausted ? (
+                <>
+                  <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
+                  <p className="font-semibold text-lg">Free Generations Exhausted</p>
+                  <p className="text-sm max-w-xs">You have used your free daily credits for this 30-day period. Please upgrade your plan to continue.</p>
+                  <Button onClick={() => { const pricing = document.getElementById('pricing'); pricing?.scrollIntoView({behavior: 'smooth'}); }} className="mt-4">Upgrade Plan</Button>
+                </>
               ) : !hasSufficientCredits ? (
                 <>
                   <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />

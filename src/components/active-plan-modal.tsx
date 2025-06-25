@@ -15,6 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface ActivePlanModalProps {
   isOpen: boolean;
@@ -24,7 +26,7 @@ interface ActivePlanModalProps {
 const allowedDomains = ["@gmail.com", "@yahoo.com"];
 
 export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModalProps) {
-  const { user, totalCredits, purchasedCredits, login, logout } = useUserPlan();
+  const { user, totalCredits, purchasedCredits, login, logout, isFreeTierExhausted } = useUserPlan();
   const [email, setEmail] = useState('');
   const { toast } = useToast();
 
@@ -114,6 +116,15 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
         
         {user ? (
           <div className="space-y-4">
+             {isFreeTierExhausted && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Free Tier Limit Reached</AlertTitle>
+                <AlertDescription>
+                  You have used all your free daily credits for this 30-day period. Please upgrade to a paid plan to continue.
+                </AlertDescription>
+              </Alert>
+            )}
             <div>
               <Label>Current Email</Label>
               <p className="font-semibold">{user.email}</p>
