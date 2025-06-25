@@ -37,14 +37,39 @@ const generateImagesFlow = ai.defineFlow(
     outputSchema: ImageGenerationOutputSchema,
   },
   async (input) => {
-    const fullPrompt = `Generate a high-quality image based on the following description.
-    Prompt: ${input.prompt}.
-    Artistic Style: ${input.artisticStyle}.
-    Mood: ${input.mood}.
-    Lighting: ${input.lighting}.
-    Color Palette: ${input.colorPalette}.
-    Image Quality: ${input.quality}.
-    Aspect Ratio: ${input.aspectRatio}.`;
+    // Construct a more effective, comma-separated prompt for the image generation model.
+    const promptParts = [
+      input.prompt,
+      input.artisticStyle,
+      input.mood,
+      input.lighting,
+    ];
+
+    if (input.colorPalette && input.colorPalette !== 'default') {
+      promptParts.push(input.colorPalette);
+    }
+
+    // Add quality keywords based on the selected plan
+    switch (input.quality) {
+      case 'hd':
+        promptParts.push('high quality');
+        promptParts.push('detailed');
+        break;
+      case 'uhd':
+        promptParts.push('ultra high quality');
+        promptParts.push('4K resolution');
+        promptParts.push('photorealistic');
+        promptParts.push('hyper-detailed');
+        break;
+      default:
+        // Standard quality needs no extra keywords
+        break;
+    }
+
+    // The model should understand aspect ratio from text.
+    promptParts.push(input.aspectRatio);
+
+    const fullPrompt = promptParts.filter(Boolean).join(', ');
     
     // Generate 4 images in parallel
     const imagePromises = Array(4).fill(null).map(() => 
