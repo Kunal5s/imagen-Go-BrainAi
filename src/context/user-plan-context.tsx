@@ -8,11 +8,11 @@ export interface PlanPurchase {
   planName: string;
   creditsAdded: number;
   purchaseDate: string;
+  remainingCredits: number;
 }
 
 export interface User {
   email: string;
-  credits: number; // purchased credits
   dailyCredits: number;
   planHistory: PlanPurchase[];
   lastLoginDate: string; // YYYY-MM-DD
@@ -22,6 +22,7 @@ interface UserPlanContextType {
   user: User | null;
   activePlan: { name: string, tier: number };
   totalCredits: number;
+  purchasedCredits: number;
   isPlanModalOpen: boolean;
   login: (email: string) => void;
   logout: () => void;
@@ -53,6 +54,16 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
   const [user, setUser] = useState<User | null>(null);
   const [isPlanModalOpen, setPlanModalOpen] = useState(false);
   
+  const updateUserInStorage = useCallback((updatedUser: User | null) => {
+    if (!updatedUser) return;
+    const storage = getLocalStorage();
+    if (!storage) return;
+
+    const allUsers = JSON.parse(storage.getItem('imagenGoUsers') || '{}');
+    allUsers[updatedUser.email] = updatedUser;
+    storage.setItem('imagenGoUsers', JSON.stringify(allUsers));
+  }, []);
+  
   const loadUser = useCallback((email: string) => {
     const storage = getLocalStorage();
     if (!storage) return;
@@ -62,16 +73,33 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     const today = new Date().toISOString().split('T')[0];
 
     if (!userData) {
-      // First time user with this email, give free daily credits
+      // First time user
       userData = {
         email,
-        credits: 0,
         dailyCredits: FREE_DAILY_CREDITS,
         planHistory: [],
         lastLoginDate: today,
       };
     } else {
-      // Returning user, check if it's a new day to reset daily credits
+       // Backward compatibility: Ensure planHistory exists and items have remainingCredits
+      userData.planHistory = (userData.planHistory || []).map(p => ({
+        ...p,
+        remainingCredits: p.remainingCredits ?? p.creditsAdded
+      }));
+       
+      // Migrate old top-level credits to a booster pack for backward compatibility
+      if ((userData as any).credits > 0) {
+        userData.planHistory.push({
+          id: uuidv4(),
+          planName: 'Booster Pack (Migrated)',
+          creditsAdded: (userData as any).credits,
+          purchaseDate: new Date().toISOString(),
+          remainingCredits: (userData as any).credits,
+        });
+        delete (userData as any).credits;
+      }
+
+      // Reset daily credits if it's a new day
       if (userData.lastLoginDate !== today) {
         userData.dailyCredits = FREE_DAILY_CREDITS;
         userData.lastLoginDate = today;
@@ -79,28 +107,17 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     }
     
     setUser(userData);
-    allUsersData[email] = userData;
-    storage.setItem('imagenGoUsers', JSON.stringify(allUsersData));
-  }, []);
+    updateUserInStorage(userData);
+  }, [updateUserInStorage]);
 
   useEffect(() => {
     const storage = getLocalStorage();
     if (!storage) return;
-
     const lastEmail = storage.getItem('imagenGoLastUser');
     if (lastEmail) {
       loadUser(lastEmail);
     }
   }, [loadUser]);
-
-  const updateUserInStorage = (updatedUser: User) => {
-    const storage = getLocalStorage();
-    if (!storage) return;
-
-    const allUsers = JSON.parse(storage.getItem('imagenGoUsers') || '{}');
-    allUsers[updatedUser.email] = updatedUser;
-    storage.setItem('imagenGoUsers', JSON.stringify(allUsers));
-  };
 
   const login = (email: string) => {
     const storage = getLocalStorage();
@@ -126,11 +143,11 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
       planName,
       creditsAdded: credits,
       purchaseDate: new Date().toISOString(),
+      remainingCredits: credits,
     };
 
     const updatedUser = {
       ...user,
-      credits: user.credits + credits, // Add to purchased credits
       planHistory: [...user.planHistory, newPurchase],
     };
 
@@ -138,52 +155,88 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     updateUserInStorage(updatedUser);
   };
 
+  const { activePlan, purchasedCredits, totalCredits } = useMemo(() => {
+    if (!user) {
+        return {
+            activePlan: { name: 'Free', tier: 0 },
+            purchasedCredits: 0,
+            totalCredits: 0,
+        };
+    }
+
+    const now = new Date();
+    const activePurchases = user.planHistory.filter(p => {
+        const purchaseDate = new Date(p.purchaseDate);
+        const expiryDate = new Date(new Date(p.purchaseDate).setDate(purchaseDate.getDate() + 30));
+        return now < expiryDate;
+    });
+
+    const currentPurchasedCredits = activePurchases.reduce((sum, p) => sum + p.remainingCredits, 0);
+
+    const highestTierPlan = activePurchases
+        .filter(p => p.planName !== 'Booster Pack' && p.planName !== 'Booster Pack (Migrated)')
+        .reduce((max, p) => (PLAN_TIERS[p.planName] > PLAN_TIERS[max.planName] ? p : max), { planName: 'Free' } as PlanPurchase);
+
+    const planDetails = {
+        name: highestTierPlan.planName,
+        tier: PLAN_TIERS[highestTierPlan.planName]
+    };
+
+    return {
+        activePlan: planDetails,
+        purchasedCredits: currentPurchasedCredits,
+        totalCredits: user.dailyCredits + currentPurchasedCredits
+    };
+  }, [user]);
+  
   const deductCredits = (amount: number) => {
-    if (!user) return;
+    if (!user || totalCredits < amount) return;
 
-    const totalUserCredits = user.credits + user.dailyCredits;
-    if (totalUserCredits < amount) return;
+    let amountToDeduct = amount;
+    const fromDaily = Math.min(amountToDeduct, user.dailyCredits);
+    const newDailyCredits = user.dailyCredits - fromDaily;
+    amountToDeduct -= fromDaily;
 
-    const fromDaily = Math.min(amount, user.dailyCredits);
-    const fromPurchased = amount - fromDaily;
+    const updatedPlanHistory = [...user.planHistory];
 
-    const updatedUser = { 
-      ...user, 
-      dailyCredits: user.dailyCredits - fromDaily,
-      credits: user.credits - fromPurchased,
+    if (amountToDeduct > 0) {
+        const now = new Date();
+        const activePurchases = updatedPlanHistory
+            .map((p, index) => ({ ...p, originalIndex: index }))
+            .filter(p => {
+                const purchaseDate = new Date(p.purchaseDate);
+                const expiryDate = new Date(new Date(p.purchaseDate).setDate(purchaseDate.getDate() + 30));
+                return now < expiryDate && p.remainingCredits > 0;
+            })
+            .sort((a, b) => new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime());
+
+        for (const purchase of activePurchases) {
+            if (amountToDeduct === 0) break;
+            const creditsToUse = Math.min(amountToDeduct, purchase.remainingCredits);
+            updatedPlanHistory[purchase.originalIndex].remainingCredits -= creditsToUse;
+            amountToDeduct -= creditsToUse;
+        }
+    }
+    
+    const updatedUser = {
+      ...user,
+      dailyCredits: newDailyCredits,
+      planHistory: updatedPlanHistory,
     };
     setUser(updatedUser);
     updateUserInStorage(updatedUser);
   };
   
   const getCreditCost = (quality: string): number => {
-    if (quality === 'uhd') return 20; // Mega Plan
-    if (quality === 'hd') return 10; // Pro Plan
-    return 2; // Standard Quality (for Free and Booster plans)
+    if (quality === 'uhd') return 20;
+    if (quality === 'hd') return 10;
+    return 2;
   };
-
-  const totalCredits = useMemo(() => {
-    if (!user) return 0;
-    return user.credits + user.dailyCredits;
-  }, [user]);
-
-  const activePlan = useMemo(() => {
-    if (!user || !user.planHistory.length) {
-      return { name: 'Free', tier: 0 };
-    }
-    
-    // Find the highest tier subscription plan (not one-time boosters)
-    const highestTierPlan = user.planHistory
-        .filter(p => p.planName !== 'Booster Pack')
-        .reduce((max, p) => (PLAN_TIERS[p.planName] > PLAN_TIERS[max.planName] ? p : max), { planName: 'Free' } as PlanPurchase);
-
-    return { name: highestTierPlan.planName, tier: PLAN_TIERS[highestTierPlan.planName] };
-  }, [user]);
 
   const openPlanModal = () => setPlanModalOpen(true);
 
   return (
-    <UserPlanContext.Provider value={{ user, activePlan, totalCredits, isPlanModalOpen, login, logout, purchasePlan, deductCredits, getCreditCost, setPlanModalOpen, openPlanModal }}>
+    <UserPlanContext.Provider value={{ user, activePlan, totalCredits, purchasedCredits, isPlanModalOpen, login, logout, purchasePlan, deductCredits, getCreditCost, setPlanModalOpen, openPlanModal }}>
       {children}
     </UserPlanContext.Provider>
   );

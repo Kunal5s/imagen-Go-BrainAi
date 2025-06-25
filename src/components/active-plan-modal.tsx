@@ -24,7 +24,7 @@ interface ActivePlanModalProps {
 const allowedDomains = ["@gmail.com", "@yahoo.com"];
 
 export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModalProps) {
-  const { user, totalCredits, login, logout, purchasePlan } = useUserPlan();
+  const { user, totalCredits, purchasedCredits, login, logout } = useUserPlan();
   const [email, setEmail] = useState('');
   const { toast } = useToast();
 
@@ -66,27 +66,41 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
     });
   };
   
-  const renderPlanHistory = (planHistory: PlanPurchase[]) => (
-    <div className="space-y-2">
-      <h4 className="font-semibold">Plan History</h4>
-      <div className="border rounded-md p-2 max-h-48 overflow-y-auto">
-        {planHistory.length > 0 ? (
-          <ul className="divide-y">
-            {planHistory.map((p) => (
-              <li key={p.id} className="py-2">
-                <p className="font-medium">{p.planName}</p>
-                <p className="text-sm text-muted-foreground">
-                  +{p.creditsAdded} credits on {format(new Date(p.purchaseDate), 'PPP')}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground text-center py-4">No plans purchased yet.</p>
-        )}
-      </div>
-    </div>
-  );
+  const renderPlanHistory = (planHistory: PlanPurchase[]) => {
+    const sortedHistory = [...planHistory].sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
+    
+    return (
+        <div className="space-y-2">
+        <h4 className="font-semibold">Purchase History</h4>
+        <div className="border rounded-md p-2 max-h-48 overflow-y-auto">
+            {sortedHistory.length > 0 ? (
+            <ul className="divide-y">
+                {sortedHistory.map((p) => {
+                    const expiryDate = new Date(new Date(p.purchaseDate).setDate(new Date(p.purchaseDate).getDate() + 30));
+                    const isExpired = new Date() > expiryDate;
+                    return (
+                        <li key={p.id} className={`py-2 ${isExpired ? 'opacity-50' : ''}`}>
+                            <div className="flex justify-between items-center">
+                                <p className="font-medium">{p.planName}</p>
+                                <p className="text-sm font-semibold">{p.remainingCredits} / {p.creditsAdded} left</p>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Purchased on {format(new Date(p.purchaseDate), 'PPP')}
+                            </p>
+                            <p className={`text-xs ${isExpired ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                {isExpired ? `Expired on ${format(expiryDate, 'PPP')}` : `Expires on ${format(expiryDate, 'PPP')}`}
+                            </p>
+                        </li>
+                    )
+                })}
+            </ul>
+            ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">No plans purchased yet.</p>
+            )}
+        </div>
+        </div>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -108,7 +122,7 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
               <Label>Total Credits Available</Label>
               <p className="text-2xl font-bold">{totalCredits}</p>
               <p className="text-xs text-muted-foreground">
-                Includes {user.dailyCredits} daily credits and {user.credits} purchased credits.
+                Includes {user.dailyCredits} daily credits and {purchasedCredits} purchased credits.
               </p>
             </div>
             {renderPlanHistory(user.planHistory)}
