@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,9 +24,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Image as ImageIcon, Sparkles, Wand2, Aperture, Ratio, Smile, Sun, Palette, Medal, Loader2 } from 'lucide-react';
+import { Image as ImageIcon, Sparkles, Wand2, Aperture, Ratio, Smile, Sun, Palette, Medal, Loader2, Star } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { generateImages } from "@/ai/flows/image-generation-flow";
@@ -42,10 +44,12 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
+type Plan = 'free' | 'pro' | 'mega' | 'booster';
 
 export default function ImageGenerator() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState<Plan>('free');
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -60,6 +64,18 @@ export default function ImageGenerator() {
       quality: 'standard',
     },
   });
+
+  const { setValue } = form;
+
+  useEffect(() => {
+    if (currentPlan === 'free' || currentPlan === 'booster') {
+      setValue('quality', 'standard');
+    } else if (currentPlan === 'pro') {
+      setValue('quality', 'hd');
+    } else if (currentPlan === 'mega') {
+      setValue('quality', 'uhd');
+    }
+  }, [currentPlan, setValue]);
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
@@ -83,6 +99,32 @@ export default function ImageGenerator() {
   return (
     <div className="space-y-8 my-12">
       <Card className="overflow-hidden shadow-lg">
+          <div className="p-6 bg-card border-b">
+              <h3 className="font-semibold text-lg mb-2">Simulate Plan</h3>
+              <p className="text-sm text-muted-foreground mb-4">Select a plan to see how quality options change.</p>
+              <RadioGroup
+                value={currentPlan}
+                onValueChange={(plan: Plan) => setCurrentPlan(plan)}
+                className="flex flex-wrap gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="free" id="r1" />
+                  <Label htmlFor="r1">Free</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="pro" id="r2" />
+                  <Label htmlFor="r2">Pro</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="mega" id="r3" />
+                  <Label htmlFor="r3">Mega</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="booster" id="r4" />
+                  <Label htmlFor="r4">Booster Pack</Label>
+                </div>
+              </RadioGroup>
+          </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="p-6 space-y-6 bg-card">
@@ -133,6 +175,16 @@ export default function ImageGenerator() {
                                       <SelectItem value="line-art">Line Art</SelectItem>
                                       <SelectItem value="isometric">Isometric</SelectItem>
                                       <SelectItem value="pixel-art">Pixel Art</SelectItem>
+                                      <SelectItem value="surrealism">Surrealism</SelectItem>
+                                      <SelectItem value="minimalism">Minimalism</SelectItem>
+                                      <SelectItem value="impressionism">Impressionism</SelectItem>
+                                      <SelectItem value="expressionism">Expressionism</SelectItem>
+                                      <SelectItem value="steampunk">Steampunk</SelectItem>
+                                      <SelectItem value="cyberpunk">Cyberpunk</SelectItem>
+                                      <SelectItem value="pop-art">Pop Art</SelectItem>
+                                      <SelectItem value="art-nouveau">Art Nouveau</SelectItem>
+                                      <SelectItem value="graffiti">Graffiti</SelectItem>
+                                      <SelectItem value="claymation">Claymation</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -148,6 +200,16 @@ export default function ImageGenerator() {
                                       <SelectItem value="landscape">Landscape (16:9)</SelectItem>
                                       <SelectItem value="widescreen">Widescreen (21:9)</SelectItem>
                                       <SelectItem value="ultrawide">Ultrawide (32:9)</SelectItem>
+                                      <SelectItem value="photo-portrait">Photo Portrait (4:5)</SelectItem>
+                                      <SelectItem value="photo-landscape">Photo Landscape (3:2)</SelectItem>
+                                      <SelectItem value="cinema-scope">CinemaScope (2.39:1)</SelectItem>
+                                      <SelectItem value="mobile-vertical">Mobile Vertical (4:5)</SelectItem>
+                                      <SelectItem value="desktop-wallpaper">Desktop Wallpaper (16:10)</SelectItem>
+                                      <SelectItem value="a4-paper">A4 Paper</SelectItem>
+                                      <SelectItem value="instagram-story">Instagram Story (9:16)</SelectItem>
+                                      <SelectItem value="facebook-post">Facebook Post (1.91:1)</SelectItem>
+                                      <SelectItem value="twitter-post">Twitter Post (16:9)</SelectItem>
+                                      <SelectItem value="pinterest-pin">Pinterest Pin (2:3)</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -167,6 +229,17 @@ export default function ImageGenerator() {
                                       <SelectItem value="somber">Somber</SelectItem>
                                       <SelectItem value="whimsical">Whimsical</SelectItem>
                                       <SelectItem value="eerie">Eerie</SelectItem>
+                                      <SelectItem value="powerful">Powerful</SelectItem>
+                                      <SelectItem value="nostalgic">Nostalgic</SelectItem>
+                                      <SelectItem value="dreamy">Dreamy</SelectItem>
+                                      <SelectItem value="chaotic">Chaotic</SelectItem>
+                                      <SelectItem value="peaceful">Peaceful</SelectItem>
+                                      <SelectItem value="playful">Playful</SelectItem>
+                                      <SelectItem value="melancholic">Melancholic</SelectItem>
+                                      <SelectItem value="opulent">Opulent</SelectItem>
+                                      <SelectItem value="futuristic">Futuristic</SelectItem>
+                                      <SelectItem value="rustic">Rustic</SelectItem>
+                                      <SelectItem value="serene">Serene</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -186,6 +259,17 @@ export default function ImageGenerator() {
                                       <SelectItem value="backlight">Backlight</SelectItem>
                                       <SelectItem value="golden-hour">Golden Hour</SelectItem>
                                       <SelectItem value="neon">Neon</SelectItem>
+                                      <SelectItem value="moonlight">Moonlight</SelectItem>
+                                      <SelectItem value="ambient">Ambient</SelectItem>
+                                      <SelectItem value="rim-lighting">Rim Lighting</SelectItem>
+                                      <SelectItem value="volumetric">Volumetric</SelectItem>
+                                      <SelectItem value="low-key">Low-key</SelectItem>
+                                      <SelectItem value="high-key">High-key</SelectItem>
+                                      <SelectItem value="underwater">Underwater</SelectItem>
+                                      <SelectItem value="spotlight">Spotlight</SelectItem>
+                                      <SelectItem value="candlelight">Candlelight</SelectItem>
+                                      <SelectItem value="bioluminescent">Bioluminescent</SelectItem>
+                                      <SelectItem value="firelight">Firelight</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -205,6 +289,17 @@ export default function ImageGenerator() {
                                       <SelectItem value="cool">Cool</SelectItem>
                                       <SelectItem value="warm">Warm</SelectItem>
                                       <SelectItem value="sepia">Sepia</SelectItem>
+                                      <SelectItem value="inverted">Inverted</SelectItem>
+                                      <SelectItem value="technicolor">Technicolor</SelectItem>
+                                      <SelectItem value="gradient">Gradient</SelectItem>
+                                      <SelectItem value="neon-noir">Neon Noir</SelectItem>
+                                      <SelectItem value="cyber-glow">Cyber Glow</SelectItem>
+                                      <SelectItem value="muted-tones">Muted Tones</SelectItem>
+                                      <SelectItem value="high-contrast">High Contrast</SelectItem>
+                                      <SelectItem value="solarized">Solarized</SelectItem>
+                                      <SelectItem value="vintage">Vintage</SelectItem>
+                                      <SelectItem value="triadic">Triadic</SelectItem>
+                                      <SelectItem value="analogous">Analogous</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -212,12 +307,16 @@ export default function ImageGenerator() {
                       <FormField control={form.control} name="quality" render={({ field }) => (
                           <FormItem>
                               <FormLabel className="flex items-center gap-2 text-xs text-muted-foreground"><Medal className="h-4 w-4" /> Quality</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select 
+                                onValueChange={field.onChange} 
+                                value={field.value} 
+                                disabled={currentPlan === 'free' || currentPlan === 'booster'}
+                              >
                                   <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                   <SelectContent>
                                       <SelectItem value="standard">Standard (1080p)</SelectItem>
-                                      <SelectItem value="hd">HD (2K)</SelectItem>
-                                      <SelectItem value="uhd">Ultra HD (4K)</SelectItem>
+                                      <SelectItem value="hd" disabled={currentPlan === 'free' || currentPlan === 'booster'}>HD (2K)</SelectItem>
+                                      <SelectItem value="uhd" disabled={currentPlan !== 'mega'}>Ultra HD (4K)</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>

@@ -17,7 +17,7 @@ const pricingPlans = [
     price: '50',
     priceUnit: '/ month',
     description: 'For professionals and creators.',
-    features: ['3,000 credits per month', 'Fast generation speed', '4K Ultra-High Quality', 'Access to all AI models', 'Commercial use license', 'Priority support'],
+    features: ['3,000 credits per month', 'Fast generation speed', 'HD (2K) Quality', 'Access to all AI models', 'Commercial use license', 'Priority support'],
     cta: 'Upgrade to Pro',
     popular: true,
   },
@@ -35,7 +35,7 @@ const pricingPlans = [
     price: '20',
     priceUnit: 'one-time',
     description: 'Add-on credit top-up.',
-    features: ['1,000 credits', 'Immediately fast generation', 'Credits never expire'],
+    features: ['1,000 credits', 'Standard Quality (1080p)', 'Immediately fast generation', 'Credits never expire'],
     cta: 'Buy Credits',
     popular: false,
   }
