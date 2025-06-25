@@ -4,47 +4,65 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 const pricingPlans = [
   {
-    name: 'Pay-as-you-go',
-    price: '0.05',
-    priceUnit: 'per photo',
-    description: 'Perfect for trying out Imagen or for occasional use.',
-    features: ['AI Editing', 'AI Culling', 'Cloud Storage', 'No commitment'],
-    cta: 'Start editing',
+    name: 'Free',
+    price: '0',
+    priceUnit: '',
+    description: 'For starters and hobbyists.',
+    features: ['10 generations per day', 'Standard Quality (1080p)', 'Access to core models', 'Personal use license'],
+    cta: 'Start Generating',
+    popular: false,
   },
   {
-    name: 'Annual Plan',
-    price: '40',
-    priceUnit: 'per month',
-    description: 'Best value for professionals and studios with high volume.',
-    features: ['Unlimited AI Editing', 'Unlimited AI Culling', '1TB Cloud Storage', 'Priority support'],
-    cta: 'Choose Annual',
+    name: 'Pro',
+    price: '50',
+    priceUnit: '/ month',
+    description: 'For professionals and creators.',
+    features: ['3,000 credits per month', 'Fast generation speed', '4K Ultra-High Quality', 'Access to all AI models', 'Commercial use license', 'Priority support'],
+    cta: 'Upgrade to Pro',
     popular: true,
   },
+  {
+    name: 'Mega',
+    price: '100',
+    priceUnit: '/ month',
+    description: 'For power users and teams.',
+    features: ['10,000 credits per month', 'Lightning-fast speed', '4K Ultra-High Quality', 'API access (coming soon)', 'Team collaboration features', 'Dedicated support'],
+    cta: 'Upgrade to Mega',
+    popular: false,
+  },
+  {
+    name: 'Booster Pack',
+    price: '20',
+    priceUnit: 'one-time',
+    description: 'Add-on credit top-up.',
+    features: ['1,000 credits', 'Immediately fast generation', 'Credits never expire'],
+    cta: 'Buy Credits',
+    popular: false,
+  }
 ];
 
 export default function PricingSection() {
   return (
-    <section id="pricing" className="py-20 md:py-32 bg-secondary">
+    <section id="pricing" className="py-20 md:py-32 bg-background">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">Pricing that makes sense</h2>
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-            Choose a plan that fits your workflow. No hidden fees.
+        <div className="text-center mb-16 max-w-2xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">Choose Your Perfect Plan</h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Simple, transparent pricing for Imagen BrainAI. No hidden fees.
           </p>
         </div>
-        <div className="flex justify-center flex-wrap gap-8 items-stretch">
+        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {pricingPlans.map((plan) => (
-            <Card key={plan.name} className={`w-full max-w-sm flex flex-col ${plan.popular ? 'border-primary-foreground/50 ring-2 ring-primary-foreground/30' : ''}`}>
+            <Card key={plan.name} className={`flex flex-col ${plan.popular ? 'border-primary ring-2 ring-primary' : 'border'}`}>
               <CardHeader>
-                {plan.popular && <div className="text-xs font-bold uppercase text-primary-foreground/80 tracking-wider mb-2 text-center">Most Popular</div>}
-                <CardTitle>{plan.name}</CardTitle>
+                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                 <div className="flex items-baseline">
+                  <span className="text-4xl font-bold">${plan.price}</span>
+                  {plan.priceUnit && <span className="text-lg font-normal text-muted-foreground ml-1">{plan.priceUnit}</span>}
+                </div>
                 <CardDescription>{plan.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex-grow">
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">${plan.price}</span>
-                  <span className="text-muted-foreground"> {plan.priceUnit}</span>
-                </div>
                 <ul className="space-y-3">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-3">
@@ -55,7 +73,7 @@ export default function PricingSection() {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" variant={plan.popular ? 'default' : 'secondary'}>{plan.cta}</Button>
+                <Button className="w-full" variant={plan.popular ? 'default' : 'outline'}>{plan.cta}</Button>
               </CardFooter>
             </Card>
           ))}

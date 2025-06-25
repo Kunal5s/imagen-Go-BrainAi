@@ -1,0 +1,56 @@
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+
+const faqs = [
+  {
+    question: "What is Imagen Max BrainAI?",
+    answer: "Imagen Max BrainAI is an advanced AI image generation platform that allows you to create high-quality, unique images from text prompts. It's designed for artists, designers, and creatives of all levels."
+  },
+  {
+    question: "What can I create with it?",
+    answer: "You can create anything you can imagine! From realistic portraits and landscapes to fantasy art, product mockups, and abstract designs. Our AI understands a wide variety of styles and concepts."
+  },
+  {
+    question: "Is there a free trial?",
+    answer: "Yes, we offer a free plan that includes 10 generations per day. It's a great way to experience the power of Imagen Max BrainAI and see how it fits into your workflow."
+  },
+  {
+    question: "What payment methods do you accept?",
+    answer: "We accept all major credit cards, including Visa, Mastercard, and American Express. All payments are processed securely."
+  },
+  {
+    question: "Can I cancel my subscription at any time?",
+    answer: "Yes, you can cancel your subscription at any time. You will retain access to your plan's features until the end of the current billing cycle."
+  }
+]
+
+export default function FaqSection() {
+  return (
+    <section id="faq" className="py-20 md:py-32 bg-secondary">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-16 max-w-2xl mx-auto">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">Frequently Asked Questions</h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Have questions? We've got answers.
+          </p>
+        </div>
+        <div className="max-w-3xl mx-auto">
+          <Accordion type="single" collapsible className="w-full">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index + 1}`}>
+                <AccordionTrigger className="text-lg text-left">{faq.question}</AccordionTrigger>
+                <AccordionContent className="text-base text-muted-foreground">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </div>
+    </section>
+  )
+}
