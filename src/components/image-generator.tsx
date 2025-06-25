@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generateImages } from "@/ai/flows/image-generation-flow";
 import { useUserPlan } from '@/context/user-plan-context';
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
@@ -51,6 +52,28 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 const IMAGES_PER_GENERATION = 5;
+
+const getAspectRatioClass = (ratio: string) => {
+    switch (ratio) {
+        case 'square': return 'aspect-square';
+        case 'portrait': return 'aspect-[9/16]';
+        case 'landscape': return 'aspect-[16/9]';
+        case 'widescreen': return 'aspect-[21/9]';
+        case 'ultrawide': return 'aspect-[32/9]';
+        case 'photo-portrait': return 'aspect-[4/5]';
+        case 'photo-landscape': return 'aspect-[3/2]';
+        case 'cinema-scope': return 'aspect-[2.39/1]';
+        case 'mobile-vertical': return 'aspect-[4/5]';
+        case 'desktop-wallpaper': return 'aspect-[16/10]';
+        case 'a4-paper': return 'aspect-[1/1.41]';
+        case 'instagram-story': return 'aspect-[9/16]';
+        case 'facebook-post': return 'aspect-[1.91/1]';
+        case 'twitter-post': return 'aspect-[16/9]';
+        case 'pinterest-pin': return 'aspect-[2/3]';
+        default: return 'aspect-square';
+    }
+};
+
 
 export default function ImageGenerator() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
@@ -73,6 +96,7 @@ export default function ImageGenerator() {
 
   const { setValue, watch } = form;
   const qualityValue = watch('quality');
+  const aspectRatioValue = watch('aspectRatio');
   const creditCost = getCreditCost(qualityValue) * IMAGES_PER_GENERATION;
   const hasSufficientCredits = totalCredits >= creditCost;
 
@@ -129,6 +153,8 @@ export default function ImageGenerator() {
       setIsLoading(false);
     }
   };
+  
+  const aspectRatioClass = getAspectRatioClass(aspectRatioValue);
 
   return (
     <div className="space-y-8 my-12">
@@ -366,16 +392,26 @@ export default function ImageGenerator() {
                   <p className="text-sm">This may take a few moments.</p>
               </div>
           ) : generatedImages.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {generatedImages.map((src, index) => (
                 <a 
                   key={index}
                   href={src}
                   download={`imagen-go-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}-${index + 1}.png`}
-                  className="aspect-square block rounded-lg overflow-hidden group relative"
+                  className={cn(
+                    "block rounded-lg overflow-hidden group relative",
+                    aspectRatioClass
+                  )}
                   title="Click to download"
                 >
-                  <Image src={src} alt={`Generated image ${index + 1}`} width={512} height={512} className="rounded-lg object-cover w-full h-full group-hover:opacity-80 transition-opacity" data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')} />
+                  <Image 
+                    src={src} 
+                    alt={`Generated image ${index + 1}`} 
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                    className="rounded-lg object-cover group-hover:opacity-80 transition-opacity" 
+                    data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')} 
+                  />
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                   </div>
