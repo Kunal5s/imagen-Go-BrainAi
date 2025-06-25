@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter
 } from "@/components/ui/card";
 import {
   Form,
@@ -28,10 +32,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Image as ImageIcon, Sparkles, Wand2, Aperture, Ratio, Smile, Sun, Palette, Medal, Loader2, Star } from 'lucide-react';
+import { Image as ImageIcon, Sparkles, Wand2, Aperture, Ratio, Smile, Sun, Palette, Medal, Loader2, Star, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { generateImages } from "@/ai/flows/image-generation-flow";
+import { useUserPlan } from '@/context/user-plan-context';
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 const formSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
@@ -44,12 +50,12 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
-type Plan = 'free' | 'pro' | 'mega' | 'booster';
+const IMAGES_PER_GENERATION = 5;
 
 export default function ImageGenerator() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState<Plan>('free');
+  const { user, getCreditCost, deductCredits, activePlan, openPlanModal } = useUserPlan();
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -65,25 +71,53 @@ export default function ImageGenerator() {
     },
   });
 
-  const { setValue } = form;
+  const { setValue, watch } = form;
+  const qualityValue = watch('quality');
+  const creditCost = getCreditCost(qualityValue) * IMAGES_PER_GENERATION;
+  const hasSufficientCredits = user ? user.credits >= creditCost : false;
 
   useEffect(() => {
-    if (currentPlan === 'free' || currentPlan === 'booster') {
-      setValue('quality', 'standard');
-    } else if (currentPlan === 'pro') {
-      setValue('quality', 'hd');
-    } else if (currentPlan === 'mega') {
+    // Automatically set quality based on the highest available plan
+    if (activePlan.name === 'Mega') {
       setValue('quality', 'uhd');
+    } else if (activePlan.name === 'Pro') {
+      setValue('quality', 'hd');
+    } else {
+      setValue('quality', 'standard');
     }
-  }, [currentPlan, setValue]);
+  }, [activePlan, setValue]);
 
   const onSubmit = async (values: FormValues) => {
+    if (!user) {
+        toast({
+            title: "Login Required",
+            description: "Please log in to start generating images.",
+            variant: "destructive"
+        });
+        openPlanModal();
+        return;
+    }
+
+    if (!hasSufficientCredits) {
+        toast({
+            title: "Insufficient Credits",
+            description: "You don't have enough credits for this generation. Please upgrade your plan.",
+            variant: "destructive"
+        });
+        return;
+    }
+
     setIsLoading(true);
     setGeneratedImages([]);
     
     try {
       const result = await generateImages(values);
       setGeneratedImages(result);
+      deductCredits(creditCost);
+      toast({
+        title: "Success!",
+        description: `${creditCost} credits were deducted from your account.`,
+      });
     } catch (error) {
       console.error("Image generation failed:", error);
       toast({
@@ -99,44 +133,19 @@ export default function ImageGenerator() {
   return (
     <div className="space-y-8 my-12">
       <Card className="overflow-hidden shadow-lg">
-          <div className="p-6 bg-card border-b">
-              <h3 className="font-semibold text-lg mb-2">Simulate Plan</h3>
-              <p className="text-sm text-muted-foreground mb-4">Select a plan to see how quality options change.</p>
-              <RadioGroup
-                value={currentPlan}
-                onValueChange={(plan: Plan) => setCurrentPlan(plan)}
-                className="flex flex-wrap gap-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="free" id="r1" />
-                  <Label htmlFor="r1">Free</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="pro" id="r2" />
-                  <Label htmlFor="r2">Pro</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="mega" id="r3" />
-                  <Label htmlFor="r3">Mega</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="booster" id="r4" />
-                  <Label htmlFor="r4">Booster Pack</Label>
-                </div>
-              </RadioGroup>
-          </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="p-6 space-y-6 bg-card">
-              <div>
-                <h3 className="font-semibold text-lg">Enter your prompt</h3>
-                <p className="text-sm text-muted-foreground">Describe the image you want to create in detail.</p>
-              </div>
+            <CardHeader>
+                <CardTitle>Image Generation Studio</CardTitle>
+                <CardDescription>Describe the image you want to create, and our AI will bring it to life.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
               <FormField
                 control={form.control}
                 name="prompt"
                 render={({ field }) => (
                   <FormItem>
+                    <FormLabel className="font-semibold">Your Prompt</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="A majestic lion wearing a crown, sitting on a throne in a cosmic library."
@@ -150,8 +159,8 @@ export default function ImageGenerator() {
               />
               
               <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
-                <AccordionItem value="item-1" className="border-b-0">
-                  <AccordionTrigger className="text-base font-semibold hover:no-underline p-0">
+                <AccordionItem value="item-1">
+                  <AccordionTrigger className="text-base font-semibold hover:no-underline">
                     <div className="flex items-center gap-2">
                       <Sparkles className="h-5 w-5" />
                       Creative Tools
@@ -310,13 +319,13 @@ export default function ImageGenerator() {
                               <Select 
                                 onValueChange={field.onChange} 
                                 value={field.value} 
-                                disabled={currentPlan === 'free' || currentPlan === 'booster'}
+                                disabled={activePlan.name === 'Free' || activePlan.name === 'Booster Pack'}
                               >
                                   <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                   <SelectContent>
                                       <SelectItem value="standard">Standard (1080p)</SelectItem>
-                                      <SelectItem value="hd" disabled={currentPlan === 'free' || currentPlan === 'booster'}>HD (2K)</SelectItem>
-                                      <SelectItem value="uhd" disabled={currentPlan !== 'mega'}>Ultra HD (4K)</SelectItem>
+                                      <SelectItem value="hd" disabled={activePlan.name === 'Free' || activePlan.name === 'Booster Pack'}>HD (2K)</SelectItem>
+                                      <SelectItem value="uhd" disabled={activePlan.name !== 'Mega'}>Ultra HD (4K)</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -325,27 +334,31 @@ export default function ImageGenerator() {
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
-            </div>
-            <div className="p-6 pt-0 flex justify-between items-center bg-card">
-              <Button type="submit" disabled={isLoading} size="lg">
+            </CardContent>
+            <CardFooter className="flex-col sm:flex-row justify-between items-center bg-muted/50 p-4">
+                <div className='text-center sm:text-left mb-4 sm:mb-0'>
+                    <p className="font-bold text-lg">
+                        {creditCost} Credits
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        Cost for {IMAGES_PER_GENERATION} images at {qualityValue} quality
+                    </p>
+                </div>
+              <Button type="submit" disabled={isLoading || !hasSufficientCredits} size="lg">
                 {isLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                     <Sparkles className="mr-2 h-4 w-4" />
                 )}
-                {isLoading ? 'Generating...' : 'Generate 4 Images'}
+                {isLoading ? 'Generating...' : `Generate ${IMAGES_PER_GENERATION} Images`}
               </Button>
-              <Button variant="outline" type="button">
-                <Wand2 className="mr-2 h-4 w-4" />
-                Suggest Prompts
-              </Button>
-            </div>
+            </CardFooter>
           </form>
         </Form>
       </Card>
       
       <Card className="min-h-[400px] flex items-center justify-center border-dashed bg-card">
-        <CardContent className="text-center p-6">
+        <CardContent className="text-center p-6 w-full">
           {isLoading ? (
               <div className="flex flex-col items-center justify-center text-muted-foreground">
                   <Loader2 className="h-16 w-16 mb-4 animate-spin" />
@@ -353,16 +366,29 @@ export default function ImageGenerator() {
                   <p className="text-sm">This may take a few moments.</p>
               </div>
           ) : generatedImages.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {generatedImages.map((src, index) => (
-                <Image key={index} src={src} alt={`Generated image ${index + 1}`} width={512} height={512} className="rounded-lg object-cover aspect-square" data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')} />
+                <div key={index} className="aspect-square">
+                    <Image src={src} alt={`Generated image ${index + 1}`} width={512} height={512} className="rounded-lg object-cover w-full h-full" data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')} />
+                </div>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center text-muted-foreground">
-              <ImageIcon className="h-16 w-16 mb-4" />
-              <p className="font-semibold">Your generated images will appear here.</p>
-              <p className="text-sm">Enter a prompt above and click "Generate" to begin.</p>
+             <div className="flex flex-col items-center justify-center text-muted-foreground">
+              {user && !hasSufficientCredits ? (
+                <>
+                  <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
+                  <p className="font-semibold text-lg">You don't have enough credits.</p>
+                  <p className="text-sm max-w-xs">Your current balance is {user.credits}, but this generation costs {creditCost}. Please upgrade your plan to continue.</p>
+                  <Button onClick={openPlanModal} className="mt-4">Upgrade Plan</Button>
+                </>
+              ) : (
+                <>
+                    <ImageIcon className="h-16 w-16 mb-4" />
+                    <p className="font-semibold">Your generated images will appear here.</p>
+                    <p className="text-sm">Enter a prompt above and click "Generate" to begin.</p>
+                </>
+              )}
             </div>
           )}
         </CardContent>

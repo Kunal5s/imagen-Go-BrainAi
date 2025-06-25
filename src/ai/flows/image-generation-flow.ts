@@ -21,7 +21,7 @@ const ImageGenerationInputSchema = z.object({
 });
 export type ImageGenerationInput = z.infer<typeof ImageGenerationInputSchema>;
 
-// The output will be an array of 4 image data URIs (strings)
+// The output will be an array of 5 image data URIs (strings)
 const ImageGenerationOutputSchema = z.array(z.string());
 export type ImageGenerationOutput = z.infer<typeof ImageGenerationOutputSchema>;
 
@@ -71,8 +71,8 @@ const generateImagesFlow = ai.defineFlow(
 
     const fullPrompt = promptParts.filter(Boolean).join(', ');
     
-    // Generate 4 images in parallel
-    const imagePromises = Array(4).fill(null).map(() => 
+    // Generate 5 images in parallel
+    const imagePromises = Array(5).fill(null).map(() => 
       ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
         prompt: fullPrompt,

@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { BrainCircuit, Menu } from 'lucide-react';
+import { BrainCircuit, Menu, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useUserPlan } from '@/context/user-plan-context';
+import ActivePlanModal from '../active-plan-modal';
 
 const navLinks = [
   { href: '/generate', label: 'Generate Image' },
@@ -14,53 +16,67 @@ const navLinks = [
 ];
 
 export default function Header() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isPlanModalOpen, setPlanModalOpen } = useUserPlan();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-7xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-bold">
-          <BrainCircuit className="h-6 w-6" />
-          <span className="hidden sm:inline-block text-lg">Imagen Go</span>
-          <span className="sm:hidden text-lg">Imagen Go</span>
-        </Link>
-        
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="text-foreground/70 transition-colors hover:text-foreground">
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-        
-        <div className="md:hidden">
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full max-w-xs p-0">
-              <div className="flex flex-col h-full">
-                <div className="flex items-center p-4 border-b">
-                  <Link href="/" className="flex items-center gap-2 font-bold" onClick={() => setIsOpen(false)}>
-                    <BrainCircuit className="h-6 w-6" />
-                    <span>Imagen Go</span>
-                  </Link>
-                </div>
-                <nav className="flex flex-col gap-4 p-4">
-                  {navLinks.map((link) => (
-                    <Link key={link.href} href={link.href} className="text-lg font-medium" onClick={() => setIsOpen(false)}>
-                      {link.label}
-                    </Link>
-                  ))}
-                </nav>
-              </div>
-            </SheetContent>
-          </Sheet>
+    <>
+      <ActivePlanModal isOpen={isPlanModalOpen} onOpenChange={setPlanModalOpen} />
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 max-w-7xl items-center justify-between px-4">
+          <Link href="/" className="flex items-center gap-2 font-bold">
+            <BrainCircuit className="h-6 w-6" />
+            <span className="hidden sm:inline-block text-lg">Imagen Go</span>
+            <span className="sm:hidden text-lg">Imagen Go</span>
+          </Link>
+          
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+            {navLinks.map((link) => (
+              <Link key={link.href} href={link.href} className="text-foreground/70 transition-colors hover:text-foreground">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant={user ? "secondary" : "default"}
+              onClick={() => setPlanModalOpen(true)}
+            >
+              <User className="h-4 w-4 mr-2" />
+              {user ? 'Active Plan' : 'Login'}
+            </Button>
+
+            <div className="md:hidden">
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Toggle Menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full max-w-xs p-0">
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-center p-4 border-b">
+                      <Link href="/" className="flex items-center gap-2 font-bold" onClick={() => setIsMobileMenuOpen(false)}>
+                        <BrainCircuit className="h-6 w-6" />
+                        <span>Imagen Go</span>
+                      </Link>
+                    </div>
+                    <nav className="flex flex-col gap-4 p-4">
+                      {navLinks.map((link) => (
+                        <Link key={link.href} href={link.href} className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+                          {link.label}
+                        </Link>
+                      ))}
+                    </nav>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }

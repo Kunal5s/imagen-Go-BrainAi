@@ -29,12 +29,12 @@ const whyChooseFeatures = [
   {
     icon: Zap,
     title: 'Instant Creativity',
-    description: 'Go from a simple idea to four stunning visual concepts in seconds. Our high-speed generation process means less waiting and more creating.',
+    description: 'Go from a simple idea to five stunning visual concepts in seconds. Our high-speed generation process means less waiting and more creating.',
   },
   {
     icon: Layers,
-    title: 'Quad-Image Generation',
-    description: 'Why settle for one? Get four unique interpretations of your prompt simultaneously. Compare, combine, or simply choose the best fit for your needs.',
+    title: 'Multi-Image Generation',
+    description: 'Why settle for one? Get five unique interpretations of your prompt simultaneously. Compare, combine, or simply choose the best fit for your needs.',
   },
   {
     icon: Palette,
