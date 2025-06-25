@@ -13,8 +13,8 @@ const pricingPlans = [
     price: 0,
     credits: 10,
     description: 'For starters and hobbyists.',
-    features: ['10 credits (one-time)', 'Standard Quality (1080p)', '5 images per generation', 'Personal use license'],
-    cta: 'Start Generating',
+    features: ['10 daily credits', 'Standard Quality (1080p)', '5 images per generation', 'Personal use license'],
+    cta: 'Your Current Plan',
     popular: false,
   },
   {

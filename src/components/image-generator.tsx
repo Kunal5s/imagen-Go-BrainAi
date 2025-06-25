@@ -55,7 +55,7 @@ const IMAGES_PER_GENERATION = 5;
 export default function ImageGenerator() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, getCreditCost, deductCredits, activePlan, openPlanModal } = useUserPlan();
+  const { user, totalCredits, getCreditCost, deductCredits, activePlan, openPlanModal } = useUserPlan();
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -74,7 +74,7 @@ export default function ImageGenerator() {
   const { setValue, watch } = form;
   const qualityValue = watch('quality');
   const creditCost = getCreditCost(qualityValue) * IMAGES_PER_GENERATION;
-  const hasSufficientCredits = user ? user.credits >= creditCost : false;
+  const hasSufficientCredits = totalCredits >= creditCost;
 
   useEffect(() => {
     // Automatically set quality based on the highest available plan
@@ -324,8 +324,8 @@ export default function ImageGenerator() {
                                   <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                   <SelectContent>
                                       <SelectItem value="standard">Standard (1080p)</SelectItem>
-                                      <SelectItem value="hd" disabled={activePlan.name === 'Free' || activePlan.name === 'Booster Pack'}>HD (2K)</SelectItem>
-                                      <SelectItem value="uhd" disabled={activePlan.name !== 'Mega'}>Ultra HD (4K)</SelectItem>
+                                      <SelectItem value="hd" disabled={activePlan.tier < 2}>HD (2K)</SelectItem>
+                                      <SelectItem value="uhd" disabled={activePlan.tier < 3}>Ultra HD (4K)</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -375,12 +375,19 @@ export default function ImageGenerator() {
             </div>
           ) : (
              <div className="flex flex-col items-center justify-center text-muted-foreground">
-              {user && !hasSufficientCredits ? (
+              {!user ? (
+                 <>
+                    <ImageIcon className="h-16 w-16 mb-4" />
+                    <p className="font-semibold">Login to start creating.</p>
+                    <p className="text-sm">Please log in to generate images and use your credits.</p>
+                    <Button onClick={openPlanModal} className="mt-4">Login</Button>
+                 </>
+              ) : !hasSufficientCredits ? (
                 <>
                   <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
                   <p className="font-semibold text-lg">You don't have enough credits.</p>
-                  <p className="text-sm max-w-xs">Your current balance is {user.credits}, but this generation costs {creditCost}. Please upgrade your plan to continue.</p>
-                  <Button onClick={openPlanModal} className="mt-4">Upgrade Plan</Button>
+                  <p className="text-sm max-w-xs">Your current balance is {totalCredits}, but this generation costs {creditCost}. Please upgrade your plan to continue.</p>
+                  <Button onClick={() => { const pricing = document.getElementById('pricing'); pricing?.scrollIntoView({behavior: 'smooth'}); }} className="mt-4">Upgrade Plan</Button>
                 </>
               ) : (
                 <>

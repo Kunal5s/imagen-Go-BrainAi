@@ -21,25 +21,40 @@ interface ActivePlanModalProps {
   onOpenChange: (isOpen: boolean) => void;
 }
 
+const allowedDomains = ["@gmail.com", "@yahoo.com"];
+
 export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModalProps) {
-  const { user, login, logout, purchasePlan } = useUserPlan();
+  const { user, totalCredits, login, logout, purchasePlan } = useUserPlan();
   const [email, setEmail] = useState('');
   const { toast } = useToast();
 
   const handleLogin = () => {
-    if (email) {
-      login(email);
-      toast({
-        title: "Switched Account",
-        description: `You are now managing the plan for ${email}.`,
-      });
-    } else {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) {
       toast({
         title: "Email Required",
         description: "Please enter an email address.",
         variant: "destructive",
       });
+      return;
     }
+
+    const isValidDomain = allowedDomains.some(domain => trimmedEmail.endsWith(domain));
+
+    if (!isValidDomain) {
+      toast({
+        title: "Invalid Email Provider",
+        description: "For security, only Gmail and Yahoo accounts are allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    login(trimmedEmail);
+    toast({
+      title: "Switched Account",
+      description: `You are now managing the plan for ${trimmedEmail}.`,
+    });
   };
 
   const handleLogout = () => {
@@ -79,7 +94,7 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
         <DialogHeader>
           <DialogTitle>Active Plan Management</DialogTitle>
           <DialogDescription>
-            Enter the email you used to purchase a plan to activate it. Your plan is linked to your email address and persists across devices.
+            Enter your email to activate your plan or log in. Your plan is linked to your email address and persists across devices.
           </DialogDescription>
         </DialogHeader>
         
@@ -90,8 +105,11 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
               <p className="font-semibold">{user.email}</p>
             </div>
             <div>
-              <Label>Total Credits</Label>
-              <p className="text-2xl font-bold">{user.credits}</p>
+              <Label>Total Credits Available</Label>
+              <p className="text-2xl font-bold">{totalCredits}</p>
+              <p className="text-xs text-muted-foreground">
+                Includes {user.dailyCredits} daily credits and {user.credits} purchased credits.
+              </p>
             </div>
             {renderPlanHistory(user.planHistory)}
             <Button onClick={handleLogout} variant="outline" className="w-full">
@@ -105,12 +123,12 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
               <Input
                 id="email-login"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="you@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
                <p className="text-xs text-muted-foreground">
-                You must use the same email address you provided during purchase.
+                You must use a valid @gmail.com or @yahoo.com email address.
               </p>
             </div>
             <Button onClick={handleLogin} className="w-full">

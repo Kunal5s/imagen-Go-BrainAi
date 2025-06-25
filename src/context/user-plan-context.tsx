@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface PlanPurchase {
@@ -12,13 +12,16 @@ export interface PlanPurchase {
 
 export interface User {
   email: string;
-  credits: number;
+  credits: number; // purchased credits
+  dailyCredits: number;
   planHistory: PlanPurchase[];
+  lastLoginDate: string; // YYYY-MM-DD
 }
 
 interface UserPlanContextType {
   user: User | null;
   activePlan: { name: string, tier: number };
+  totalCredits: number;
   isPlanModalOpen: boolean;
   login: (email: string) => void;
   logout: () => void;
@@ -31,7 +34,7 @@ interface UserPlanContextType {
 
 const UserPlanContext = createContext<UserPlanContextType | undefined>(undefined);
 
-const FREE_PLAN_CREDITS = 10;
+const FREE_DAILY_CREDITS = 10;
 const PLAN_TIERS: { [key: string]: number } = {
     'Free': 0,
     'Booster Pack': 1,
@@ -55,24 +58,29 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     if (!storage) return;
 
     const allUsersData = JSON.parse(storage.getItem('imagenGoUsers') || '{}');
-    let userData = allUsersData[email];
+    let userData: User = allUsersData[email];
+    const today = new Date().toISOString().split('T')[0];
 
     if (!userData) {
-      // First time user with this email, give free credits
+      // First time user with this email, give free daily credits
       userData = {
         email,
-        credits: FREE_PLAN_CREDITS,
-        planHistory: [{
-            id: uuidv4(),
-            planName: 'Free',
-            creditsAdded: FREE_PLAN_CREDITS,
-            purchaseDate: new Date().toISOString()
-        }],
+        credits: 0,
+        dailyCredits: FREE_DAILY_CREDITS,
+        planHistory: [],
+        lastLoginDate: today,
       };
-      allUsersData[email] = userData;
-      storage.setItem('imagenGoUsers', JSON.stringify(allUsersData));
+    } else {
+      // Returning user, check if it's a new day to reset daily credits
+      if (userData.lastLoginDate !== today) {
+        userData.dailyCredits = FREE_DAILY_CREDITS;
+        userData.lastLoginDate = today;
+      }
     }
+    
     setUser(userData);
+    allUsersData[email] = userData;
+    storage.setItem('imagenGoUsers', JSON.stringify(allUsersData));
   }, []);
 
   useEffect(() => {
@@ -122,7 +130,7 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
 
     const updatedUser = {
       ...user,
-      credits: user.credits + credits,
+      credits: user.credits + credits, // Add to purchased credits
       planHistory: [...user.planHistory, newPurchase],
     };
 
@@ -131,9 +139,19 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
   };
 
   const deductCredits = (amount: number) => {
-    if (!user || user.credits < amount) return;
+    if (!user) return;
 
-    const updatedUser = { ...user, credits: user.credits - amount };
+    const totalUserCredits = user.credits + user.dailyCredits;
+    if (totalUserCredits < amount) return;
+
+    const fromDaily = Math.min(amount, user.dailyCredits);
+    const fromPurchased = amount - fromDaily;
+
+    const updatedUser = { 
+      ...user, 
+      dailyCredits: user.dailyCredits - fromDaily,
+      credits: user.credits - fromPurchased,
+    };
     setUser(updatedUser);
     updateUserInStorage(updatedUser);
   };
@@ -144,7 +162,12 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     return 2; // Standard (Free/Booster)
   };
 
-  const activePlan = React.useMemo(() => {
+  const totalCredits = useMemo(() => {
+    if (!user) return 0;
+    return user.credits + user.dailyCredits;
+  }, [user]);
+
+  const activePlan = useMemo(() => {
     if (!user || !user.planHistory.length) {
       return { name: 'Free', tier: 0 };
     }
@@ -152,7 +175,7 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     // Find the highest tier subscription plan (not one-time boosters)
     const highestTierPlan = user.planHistory
         .filter(p => p.planName !== 'Booster Pack')
-        .reduce((max, p) => (PLAN_TIERS[p.planName] > PLAN_TIERS[max.planName] ? p : max), { planName: 'Free' });
+        .reduce((max, p) => (PLAN_TIERS[p.planName] > PLAN_TIERS[max.planName] ? p : max), { planName: 'Free' } as PlanPurchase);
 
     return { name: highestTierPlan.planName, tier: PLAN_TIERS[highestTierPlan.planName] };
   }, [user]);
@@ -160,7 +183,7 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
   const openPlanModal = () => setPlanModalOpen(true);
 
   return (
-    <UserPlanContext.Provider value={{ user, activePlan, isPlanModalOpen, login, logout, purchasePlan, deductCredits, getCreditCost, setPlanModalOpen, openPlanModal }}>
+    <UserPlanContext.Provider value={{ user, activePlan, totalCredits, isPlanModalOpen, login, logout, purchasePlan, deductCredits, getCreditCost, setPlanModalOpen, openPlanModal }}>
       {children}
     </UserPlanContext.Provider>
   );
