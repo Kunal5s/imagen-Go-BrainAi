@@ -74,6 +74,11 @@ export default function PricingSection() {
       return;
     }
 
+    if (plan.id === 'booster') {
+      window.location.href = 'https://buy.polar.sh/polar_cl_u5vpk1YGAidaW5Lf7PXbDiWqo7jDVyWlv1v0o3G0NAh';
+      return;
+    }
+
     purchasePlan(plan.name, plan.credits);
     toast({
       title: "Plan Purchased!",
