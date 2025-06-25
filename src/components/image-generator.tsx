@@ -368,9 +368,18 @@ export default function ImageGenerator() {
           ) : generatedImages.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               {generatedImages.map((src, index) => (
-                <div key={index} className="aspect-square">
-                    <Image src={src} alt={`Generated image ${index + 1}`} width={512} height={512} className="rounded-lg object-cover w-full h-full" data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')} />
-                </div>
+                <a 
+                  key={index}
+                  href={src}
+                  download={`imagen-go-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}-${index + 1}.png`}
+                  className="aspect-square block rounded-lg overflow-hidden group relative"
+                  title="Click to download"
+                >
+                  <Image src={src} alt={`Generated image ${index + 1}`} width={512} height={512} className="rounded-lg object-cover w-full h-full group-hover:opacity-80 transition-opacity" data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')} />
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                  </div>
+                </a>
               ))}
             </div>
           ) : (

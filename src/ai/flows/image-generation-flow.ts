@@ -54,6 +54,7 @@ const generateImagesFlow = ai.defineFlow(
       case 'hd':
         promptParts.push('high quality');
         promptParts.push('detailed');
+        promptParts.push('2K resolution');
         break;
       case 'uhd':
         promptParts.push('ultra high quality');
@@ -62,7 +63,9 @@ const generateImagesFlow = ai.defineFlow(
         promptParts.push('hyper-detailed');
         break;
       default:
-        // Standard quality needs no extra keywords
+        // Standard quality
+        promptParts.push('standard definition');
+        promptParts.push('1080p');
         break;
     }
 

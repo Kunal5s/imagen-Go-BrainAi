@@ -157,9 +157,9 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
   };
   
   const getCreditCost = (quality: string): number => {
-    if (quality === 'uhd') return 20; // Mega
-    if (quality === 'hd') return 10; // Pro
-    return 2; // Standard (Free/Booster)
+    if (quality === 'uhd') return 20; // Mega Plan
+    if (quality === 'hd') return 10; // Pro Plan
+    return 2; // Standard Quality (for Free and Booster plans)
   };
 
   const totalCredits = useMemo(() => {
