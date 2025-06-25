@@ -1,63 +1,19 @@
+
 "use client"
 
-import { Check, Info } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUserPlan } from '@/context/user-plan-context';
 import { useToast } from '@/hooks/use-toast';
-
-const pricingPlans = [
-  {
-    id: 'free',
-    name: 'Free',
-    price: 0,
-    credits: 10,
-    description: 'For starters and hobbyists.',
-    features: ['10 daily credits', '2 credits per image (Standard)', '5 images per generation', 'Personal use license'],
-    cta: 'Your Current Plan',
-    popular: false,
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: 50,
-    priceUnit: '/ month',
-    credits: 3000,
-    description: 'For professionals and creators.',
-    features: ['3,000 credits per month', '10 credits per image (HD)', 'HD (2K) Quality access', 'Commercial use license', 'Priority support'],
-    cta: 'Upgrade to Pro',
-    popular: true,
-  },
-  {
-    id: 'mega',
-    name: 'Mega',
-    price: 100,
-    priceUnit: '/ month',
-    credits: 10000,
-    description: 'For power users and teams.',
-    features: ['10,000 credits per month', '20 credits per image (UHD)', '4K Ultra-High Quality access', 'API access (coming soon)', 'Team collaboration features'],
-    cta: 'Upgrade to Mega',
-    popular: false,
-  },
-  {
-    id: 'booster',
-    name: 'Booster Pack',
-    price: 20,
-    priceUnit: 'one-time',
-    credits: 1000,
-    description: 'Add-on credit top-up.',
-    features: ['1,000 credits', '2 credits per image (Standard)', 'Credits never expire', 'Use with any plan'],
-    cta: 'Buy Credits',
-    popular: false,
-  }
-];
+import { pricingPlans } from '@/lib/plans';
 
 export default function PricingSection() {
-  const { user, purchasePlan, openPlanModal } = useUserPlan();
+  const { user, openPlanModal } = useUserPlan();
   const { toast } = useToast();
 
   const handlePurchase = (plan: typeof pricingPlans[0]) => {
-    if (plan.id === 'free') return;
+    if (plan.id === 'free' || !plan.purchaseLink) return;
 
     if (!user) {
       toast({
@@ -69,20 +25,11 @@ export default function PricingSection() {
       return;
     }
 
-    if (plan.id === 'pro') {
-      window.location.href = 'https://buy.polar.sh/polar_cl_iQpYIoo3qkW310DMOKN5lXhQo70OHOiLLU5Fp0eZ49f';
-      return;
-    }
-
-    if (plan.id === 'mega') {
-      window.location.href = 'https://buy.polar.sh/polar_cl_xkFeAW6Ib01eE9ya6C6jRJVdkpSmHIb9xMnXL0trOi7';
-      return;
-    }
-
-    if (plan.id === 'booster') {
-      window.location.href = 'https://buy.polar.sh/polar_cl_u5vpk1YGAidaW5Lf7PXbDiWqo7jDVyWlv1v0o3G0NAh';
-      return;
-    }
+    const emailQueryParam = `email=${encodeURIComponent(user.email)}`;
+    const successUrlParam = `success_url=${encodeURIComponent(`${window.location.origin}/purchase-success?plan_id=${plan.id}&email=${user.email}`)}`;
+    
+    const purchaseUrl = `${plan.purchaseLink}?${emailQueryParam}&${successUrlParam}`;
+    window.location.href = purchaseUrl;
   };
 
   return (
