@@ -28,6 +28,7 @@ interface UserPlanContextType {
   purchasedCredits: number;
   isPlanModalOpen: boolean;
   isFreeTierExhausted: boolean;
+  lastUsedEmail: string | null;
   login: (email: string) => void;
   logout: () => void;
   purchasePlan: (planName: string, credits: number) => void;
@@ -58,6 +59,7 @@ const getLocalStorage = () => {
 export const UserPlanProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isPlanModalOpen, setPlanModalOpen] = useState(false);
+  const [lastUsedEmail, setLastUsedEmail] = useState<string | null>(null);
   
   const updateUserInStorage = useCallback((updatedUser: User | null) => {
     if (!updatedUser) return;
@@ -131,9 +133,13 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     const storage = getLocalStorage();
     if (!storage) return;
-    const lastEmail = storage.getItem('imagenGoBrainAiLastUser');
-    if (lastEmail) {
-      loadUser(lastEmail);
+    const lastActiveEmail = storage.getItem('imagenGoBrainAiLastUser');
+    if (lastActiveEmail) {
+      loadUser(lastActiveEmail);
+    }
+    const lastEverUsedEmail = storage.getItem('imagenGoBrainAiLastUsedEmail');
+    if (lastEverUsedEmail) {
+      setLastUsedEmail(lastEverUsedEmail);
     }
   }, [loadUser]);
 
@@ -142,6 +148,8 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     if (!storage) return;
 
     storage.setItem('imagenGoBrainAiLastUser', email);
+    storage.setItem('imagenGoBrainAiLastUsedEmail', email);
+    setLastUsedEmail(email);
     loadUser(email);
   };
 
@@ -261,7 +269,7 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
   const openPlanModal = () => setPlanModalOpen(true);
 
   return (
-    <UserPlanContext.Provider value={{ user, activePlan, totalCredits, purchasedCredits, isPlanModalOpen, isFreeTierExhausted, login, logout, purchasePlan, deductCredits, getCreditCost, setPlanModalOpen, openPlanModal }}>
+    <UserPlanContext.Provider value={{ user, activePlan, totalCredits, purchasedCredits, isPlanModalOpen, isFreeTierExhausted, lastUsedEmail, login, logout, purchasePlan, deductCredits, getCreditCost, setPlanModalOpen, openPlanModal }}>
       {children}
     </UserPlanContext.Provider>
   );

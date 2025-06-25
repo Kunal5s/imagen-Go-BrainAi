@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUserPlan, PlanPurchase } from '@/context/user-plan-context';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,9 +26,15 @@ interface ActivePlanModalProps {
 const allowedDomains = ["@gmail.com", "@yahoo.com"];
 
 export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModalProps) {
-  const { user, totalCredits, purchasedCredits, login, logout, isFreeTierExhausted } = useUserPlan();
+  const { user, totalCredits, purchasedCredits, login, logout, isFreeTierExhausted, lastUsedEmail } = useUserPlan();
   const [email, setEmail] = useState('');
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (isOpen && !user) {
+      setEmail(lastUsedEmail || '');
+    }
+  }, [isOpen, user, lastUsedEmail]);
 
   const handleLogin = () => {
     const trimmedEmail = email.trim().toLowerCase();
