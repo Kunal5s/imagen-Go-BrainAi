@@ -75,7 +75,13 @@ export default function Home() {
   return (
     <>
       <HeroSection />
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 my-12">
+        <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Try It Now</h2>
+            <p className="max-w-3xl mx-auto text-muted-foreground mt-4 text-base md:text-lg">
+                No account needed to try. Enter a prompt below to see the magic happen.
+            </p>
+        </div>
         <ImageGenerator />
       </div>
       <WhyChooseSection />
