@@ -69,6 +69,11 @@ export default function PricingSection() {
       return;
     }
 
+    if (plan.id === 'mega') {
+      window.location.href = 'https://buy.polar.sh/polar_cl_xkFeAW6Ib01eE9ya6C6jRJVdkpSmHIb9xMnXL0trOi7';
+      return;
+    }
+
     purchasePlan(plan.name, plan.credits);
     toast({
       title: "Plan Purchased!",
