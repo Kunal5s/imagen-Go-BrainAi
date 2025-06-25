@@ -28,6 +28,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Image as ImageIcon, Sparkles, Wand2, Aperture, Ratio, Smile, Sun, Palette, Medal, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { useToast } from "@/hooks/use-toast";
+import { generateImages } from "@/ai/flows/image-generation-flow";
 
 const formSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
@@ -44,6 +46,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function ImageGenerator() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -61,16 +64,20 @@ export default function ImageGenerator() {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     setGeneratedImages([]);
-    console.log(values);
-    // AI call would go here
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setGeneratedImages([
-      'https://placehold.co/512x512.png',
-      'https://placehold.co/512x512.png',
-      'https://placehold.co/512x512.png',
-      'https://placehold.co/512x512.png',
-    ]);
-    setIsLoading(false);
+    
+    try {
+      const result = await generateImages(values);
+      setGeneratedImages(result);
+    } catch (error) {
+      console.error("Image generation failed:", error);
+      toast({
+        title: "Error Generating Images",
+        description: "The AI was unable to generate images for this prompt. This can happen due to safety filters or other issues. Please try a different prompt.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -249,7 +256,7 @@ export default function ImageGenerator() {
           ) : generatedImages.length > 0 ? (
             <div className="grid grid-cols-2 gap-4">
               {generatedImages.map((src, index) => (
-                <Image key={index} src={src} alt={`Generated image ${index + 1}`} width={256} height={256} className="rounded-lg object-cover aspect-square" data-ai-hint="lion space" />
+                <Image key={index} src={src} alt={`Generated image ${index + 1}`} width={512} height={512} className="rounded-lg object-cover aspect-square" data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')} />
               ))}
             </div>
           ) : (
