@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const navLinks = [
-  { href: '#', label: 'Generate Image' },
-  { href: '#', label: 'About Us' },
-  { href: '#', label: 'Contact Us' },
-  { href: '#', label: 'Pricing' },
+  { href: '/generate', label: 'Generate Image' },
+  { href: '/about', label: 'About Us' },
+  { href: '/contact', label: 'Contact Us' },
+  { href: '/#pricing', label: 'Pricing' },
 ];
 
 export default function Header() {
@@ -21,8 +21,8 @@ export default function Header() {
       <div className="container flex h-16 max-w-7xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold">
           <BrainCircuit className="h-6 w-6" />
-          <span className="hidden sm:inline-block text-lg">Imagen Max BrainAi</span>
-          <span className="sm:hidden text-lg">BrainAI</span>
+          <span className="hidden sm:inline-block text-lg">Imagen Go</span>
+          <span className="sm:hidden text-lg">Imagen Go</span>
         </Link>
         
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
@@ -46,7 +46,7 @@ export default function Header() {
                 <div className="flex items-center p-4 border-b">
                   <Link href="/" className="flex items-center gap-2 font-bold" onClick={() => setIsOpen(false)}>
                     <BrainCircuit className="h-6 w-6" />
-                    <span>Imagen Max BrainAi</span>
+                    <span>Imagen Go</span>
                   </Link>
                 </div>
                 <nav className="flex flex-col gap-4 p-4">

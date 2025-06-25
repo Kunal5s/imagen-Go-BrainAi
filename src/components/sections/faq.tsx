@@ -7,8 +7,8 @@ import {
 
 const faqs = [
   {
-    question: "What is Imagen Max BrainAI?",
-    answer: "Imagen Max BrainAI is an advanced AI image generation platform that allows you to create high-quality, unique images from text prompts. It's designed for artists, designers, and creatives of all levels."
+    question: "What is Imagen Go?",
+    answer: "Imagen Go is an advanced AI image generation platform that allows you to create high-quality, unique images from text prompts. It's designed for artists, designers, and creatives of all levels."
   },
   {
     question: "What can I create with it?",
@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     question: "Is there a free trial?",
-    answer: "Yes, we offer a free plan that includes 10 generations per day. It's a great way to experience the power of Imagen Max BrainAI and see how it fits into your workflow."
+    answer: "Yes, we offer a free plan that includes 10 generations per day. It's a great way to experience the power of Imagen Go and see how it fits into your workflow."
   },
   {
     question: "What payment methods do you accept?",
@@ -25,6 +25,26 @@ const faqs = [
   {
     question: "Can I cancel my subscription at any time?",
     answer: "Yes, you can cancel your subscription at any time. You will retain access to your plan's features until the end of the current billing cycle."
+  },
+  {
+    question: "How many images are generated per prompt?",
+    answer: "Our platform generates four unique image variations for every prompt you enter. This gives you a range of options to choose from and helps you find the perfect visual representation of your idea faster."
+  },
+  {
+    question: "What image resolutions are supported?",
+    answer: "Our plans support various resolutions. The Free plan offers Standard Quality (1080p), while our Pro and Mega plans provide up to 4K Ultra-High Quality for crystal-clear, professional-grade images."
+  },
+  {
+    question: "Can I use the generated images for commercial purposes?",
+    answer: "Yes! Images created under our Pro and Mega plans come with a commercial use license, allowing you to use them in your projects, for marketing, on products, and more."
+  },
+  {
+    question: "How does the credit system work?",
+    answer: "Credits are used to generate images. One credit typically equals one generation quad. Our paid plans come with a monthly credit allowance, and you can purchase Booster Packs if you need more."
+  },
+  {
+    question: "Do you store my generated images?",
+    answer: "Yes, your generated images are saved to your personal gallery, allowing you to access, view, and download them at any time from your account."
   }
 ]
 

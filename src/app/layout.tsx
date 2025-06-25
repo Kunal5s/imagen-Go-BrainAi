@@ -5,8 +5,9 @@ import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 
 export const metadata: Metadata = {
-  title: 'Imagen Max BrainAi',
-  description: 'A state-of-the-art platform that transforms your text prompts into breathtaking, high-quality images in seconds.',
+  title: 'Imagen Go: AI Image Generator',
+  description: 'Transform your text prompts into breathtaking, high-quality images with Imagen Go. Our state-of-the-art AI image generation platform offers unparalleled control, speed, and customization for designers, artists, and creatives.',
+  keywords: ['AI image generator', 'text to image', 'AI art', 'digital art', 'creative tool', 'image creation', 'Imagen Go'],
 };
 
 export default function RootLayout({
