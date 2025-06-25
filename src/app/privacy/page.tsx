@@ -7,7 +7,7 @@ export default function PrivacyPolicyPage() {
           <p>Last updated: {new Date().toLocaleDateString()}</p>
 
           <p>
-            Imagen Go ("us", "we", or "our") operates the Imagen Go website (the "Service"). This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.
+            Imagen Go BrainAi ("us", "we", or "our") operates the Imagen Go BrainAi website (the "Service"). This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.
           </p>
 
           <h2 className="text-2xl font-bold mt-6">Information Collection and Use</h2>
@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
           </p>
 
           <h2 className="text-2xl font-bold mt-6">Use of Data</h2>
-          <p>Imagen Go uses the collected data for various purposes:</p>
+          <p>Imagen Go BrainAi uses the collected data for various purposes:</p>
           <ul>
             <li>To provide and maintain our Service</li>
             <li>To notify you about changes to our Service</li>

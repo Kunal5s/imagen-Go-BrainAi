@@ -403,7 +403,7 @@ export default function ImageGenerator() {
                 <a 
                   key={index}
                   href={src}
-                  download={`imagen-go-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}-${index + 1}.png`}
+                  download={`imagen-go-brainai-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}-${index + 1}.png`}
                   className={cn(
                     "block rounded-lg overflow-hidden group relative",
                     aspectRatioClass

@@ -7,8 +7,8 @@ import {
 
 const faqs = [
   {
-    question: "What is Imagen Go?",
-    answer: "Imagen Go is an advanced AI image generation platform that allows you to create high-quality, unique images from text prompts. It's designed for artists, designers, and creatives of all levels."
+    question: "What is Imagen Go BrainAi?",
+    answer: "Imagen Go BrainAi is an advanced AI image generation platform that allows you to create high-quality, unique images from text prompts. It's designed for artists, designers, and creatives of all levels."
   },
   {
     question: "What can I create with it?",
@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     question: "Is there a free trial?",
-    answer: "Yes, we offer a free plan that includes 10 generations per day. It's a great way to experience the power of Imagen Go and see how it fits into your workflow."
+    answer: "Yes, we offer a free plan that includes 10 generations per day. It's a great way to experience the power of Imagen Go BrainAi and see how it fits into your workflow."
   },
   {
     question: "What payment methods do you accept?",

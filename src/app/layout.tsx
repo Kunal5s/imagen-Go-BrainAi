@@ -6,9 +6,9 @@ import Footer from '@/components/layout/footer';
 import { UserPlanProvider } from '@/context/user-plan-context';
 
 export const metadata: Metadata = {
-  title: 'Imagen Go: AI Image Generator',
-  description: 'Transform your text prompts into breathtaking, high-quality images with Imagen Go. Our state-of-the-art AI image generation platform offers unparalleled control, speed, and customization for designers, artists, and creatives.',
-  keywords: ['AI image generator', 'text to image', 'AI art', 'digital art', 'creative tool', 'image creation', 'Imagen Go'],
+  title: 'Imagen Go BrainAi: AI Image Generator',
+  description: 'Transform your text prompts into breathtaking, high-quality images with Imagen Go BrainAi. Our state-of-the-art AI image generation platform offers unparalleled control, speed, and customization for designers, artists, and creatives.',
+  keywords: ['AI image generator', 'text to image', 'AI art', 'digital art', 'creative tool', 'image creation', 'Imagen Go BrainAi'],
 };
 
 export default function RootLayout({

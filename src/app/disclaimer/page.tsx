@@ -7,7 +7,7 @@ export default function DisclaimerPage() {
           <p>Last updated: {new Date().toLocaleDateString()}</p>
 
           <p>
-            The information provided by Imagen Go ("we," "us," or "our") on this website (the "Service") is for general informational purposes only. All information on the Service is provided in good faith, however we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on the Service.
+            The information provided by Imagen Go BrainAi ("we," "us," or "our") on this website (the "Service") is for general informational purposes only. All information on the Service is provided in good faith, however we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on the Service.
           </p>
 
           <h2 className="text-2xl font-bold mt-6">AI Generated Content Disclaimer</h2>
@@ -23,7 +23,7 @@ export default function DisclaimerPage() {
 
           <h2 className="text-2xl font-bold mt-6">External Links Disclaimer</h2>
           <p>
-            The Service may contain links to external websites that are not provided or maintained by or in any way affiliated with Imagen Go. Please note that the Imagen Go does not guarantee the accuracy, relevance, timeliness, or completeness of any information on these external websites.
+            The Service may contain links to external websites that are not provided or maintained by or in any way affiliated with Imagen Go BrainAi. Please note that the Imagen Go BrainAi does not guarantee the accuracy, relevance, timeliness, or completeness of any information on these external websites.
           </p>
 
           <h2 className="text-2xl font-bold mt-6">No Professional Advice</h2>

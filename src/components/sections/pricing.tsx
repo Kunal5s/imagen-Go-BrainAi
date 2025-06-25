@@ -91,7 +91,7 @@ export default function PricingSection() {
         <div className="text-center mb-16 max-w-2xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tighter">Choose Your Perfect Plan</h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Simple, transparent pricing for Imagen Go. Your credits, your creations.
+            Simple, transparent pricing for Imagen Go BrainAi. Your credits, your creations.
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">

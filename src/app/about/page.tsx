@@ -5,7 +5,7 @@ export default function AboutPage() {
     <div className="bg-background">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">About Imagen Go</h1>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">About Imagen Go BrainAi</h1>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             We are on a mission to democratize creativity and empower everyone to become a digital artist.
           </p>
@@ -30,7 +30,7 @@ export default function AboutPage() {
             <Eye className="h-12 w-12 text-primary mb-4" />
             <h2 className="text-2xl font-semibold mb-2">Our Vision</h2>
             <p className="text-muted-foreground">
-              We envision a future where the only limit to visual creation is your imagination. Imagen Go aims to be the go-to platform for creators of all kinds, from professional designers to everyday social media users, to express their ideas visually.
+              We envision a future where the only limit to visual creation is your imagination. Imagen Go BrainAi aims to be the go-to platform for creators of all kinds, from professional designers to everyday social media users, to express their ideas visually.
             </p>
           </div>
         </div>

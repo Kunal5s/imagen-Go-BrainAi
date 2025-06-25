@@ -64,16 +64,16 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     const storage = getLocalStorage();
     if (!storage) return;
 
-    const allUsers = JSON.parse(storage.getItem('imagenGoUsers') || '{}');
+    const allUsers = JSON.parse(storage.getItem('imagenGoBrainAiUsers') || '{}');
     allUsers[updatedUser.email] = updatedUser;
-    storage.setItem('imagenGoUsers', JSON.stringify(allUsers));
+    storage.setItem('imagenGoBrainAiUsers', JSON.stringify(allUsers));
   }, []);
   
   const loadUser = useCallback((email: string) => {
     const storage = getLocalStorage();
     if (!storage) return;
 
-    const allUsersData = JSON.parse(storage.getItem('imagenGoUsers') || '{}');
+    const allUsersData = JSON.parse(storage.getItem('imagenGoBrainAiUsers') || '{}');
     let userData: User = allUsersData[email];
     const today = new Date().toISOString().split('T')[0];
 
@@ -131,7 +131,7 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     const storage = getLocalStorage();
     if (!storage) return;
-    const lastEmail = storage.getItem('imagenGoLastUser');
+    const lastEmail = storage.getItem('imagenGoBrainAiLastUser');
     if (lastEmail) {
       loadUser(lastEmail);
     }
@@ -141,14 +141,14 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     const storage = getLocalStorage();
     if (!storage) return;
 
-    storage.setItem('imagenGoLastUser', email);
+    storage.setItem('imagenGoBrainAiLastUser', email);
     loadUser(email);
   };
 
   const logout = () => {
     const storage = getLocalStorage();
     if (storage) {
-        storage.removeItem('imagenGoLastUser');
+        storage.removeItem('imagenGoBrainAiLastUser');
     }
     setUser(null);
   };

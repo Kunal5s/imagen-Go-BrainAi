@@ -7,7 +7,7 @@ export default function TermsOfServicePage() {
           <p>Last updated: {new Date().toLocaleDateString()}</p>
 
           <p>
-            Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the Imagen Go website (the "Service") operated by Imagen Go ("us", "we", or "our").
+            Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the Imagen Go BrainAi website (the "Service") operated by Imagen Go BrainAi ("us", "we", or "our").
           </p>
 
           <p>
