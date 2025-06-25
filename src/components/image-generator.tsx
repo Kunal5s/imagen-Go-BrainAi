@@ -121,6 +121,11 @@ export default function ImageGenerator() {
                                       <SelectItem value="anime">Anime</SelectItem>
                                       <SelectItem value="fantasy">Fantasy Art</SelectItem>
                                       <SelectItem value="3d">3D Render</SelectItem>
+                                      <SelectItem value="comic-book">Comic Book</SelectItem>
+                                      <SelectItem value="watercolor">Watercolor</SelectItem>
+                                      <SelectItem value="line-art">Line Art</SelectItem>
+                                      <SelectItem value="isometric">Isometric</SelectItem>
+                                      <SelectItem value="pixel-art">Pixel Art</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -134,6 +139,8 @@ export default function ImageGenerator() {
                                       <SelectItem value="square">Square (1:1)</SelectItem>
                                       <SelectItem value="portrait">Portrait (9:16)</SelectItem>
                                       <SelectItem value="landscape">Landscape (16:9)</SelectItem>
+                                      <SelectItem value="widescreen">Widescreen (21:9)</SelectItem>
+                                      <SelectItem value="ultrawide">Ultrawide (32:9)</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -148,6 +155,11 @@ export default function ImageGenerator() {
                                       <SelectItem value="happy">Happy</SelectItem>
                                       <SelectItem value="dramatic">Dramatic</SelectItem>
                                       <SelectItem value="calm">Calm</SelectItem>
+                                      <SelectItem value="energetic">Energetic</SelectItem>
+                                      <SelectItem value="romantic">Romantic</SelectItem>
+                                      <SelectItem value="somber">Somber</SelectItem>
+                                      <SelectItem value="whimsical">Whimsical</SelectItem>
+                                      <SelectItem value="eerie">Eerie</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -162,6 +174,11 @@ export default function ImageGenerator() {
                                       <SelectItem value="natural">Natural</SelectItem>
                                       <SelectItem value="studio">Studio</SelectItem>
                                       <SelectItem value="dramatic">Dramatic</SelectItem>
+                                      <SelectItem value="soft">Soft</SelectItem>
+                                      <SelectItem value="hard">Hard</SelectItem>
+                                      <SelectItem value="backlight">Backlight</SelectItem>
+                                      <SelectItem value="golden-hour">Golden Hour</SelectItem>
+                                      <SelectItem value="neon">Neon</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
@@ -176,6 +193,11 @@ export default function ImageGenerator() {
                                       <SelectItem value="vibrant">Vibrant</SelectItem>
                                       <SelectItem value="monochrome">Monochrome</SelectItem>
                                       <SelectItem value="pastel">Pastel</SelectItem>
+                                      <SelectItem value="earth-tones">Earth Tones</SelectItem>
+                                      <SelectItem value="jewel-tones">Jewel Tones</SelectItem>
+                                      <SelectItem value="cool">Cool</SelectItem>
+                                      <SelectItem value="warm">Warm</SelectItem>
+                                      <SelectItem value="sepia">Sepia</SelectItem>
                                   </SelectContent>
                               </Select>
                           </FormItem>
