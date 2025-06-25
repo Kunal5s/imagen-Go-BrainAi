@@ -69,6 +69,11 @@ export default function PricingSection() {
       return;
     }
 
+    if (plan.id === 'pro') {
+      window.location.href = 'https://buy.polar.sh/polar_cl_iQpYIoo3qkW310DMOKN5lXhQo70OHOiLLU5Fp0eZ49f';
+      return;
+    }
+
     if (plan.id === 'mega') {
       window.location.href = 'https://buy.polar.sh/polar_cl_xkFeAW6Ib01eE9ya6C6jRJVdkpSmHIb9xMnXL0trOi7';
       return;
@@ -78,12 +83,6 @@ export default function PricingSection() {
       window.location.href = 'https://buy.polar.sh/polar_cl_u5vpk1YGAidaW5Lf7PXbDiWqo7jDVyWlv1v0o3G0NAh';
       return;
     }
-
-    purchasePlan(plan.name, plan.credits);
-    toast({
-      title: "Plan Purchased!",
-      description: `You've successfully purchased the ${plan.name} plan. ${plan.credits} credits have been added to your account.`,
-    });
   };
 
   return (
