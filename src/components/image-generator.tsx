@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -84,7 +85,7 @@ export default function ImageGenerator() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: 'A majestic lion wearing a crown, sitting on a throne in a cosmic library.',
-      model: 'google-imagen',
+      model: 'pollinations',
       artisticStyle: 'photographic',
       aspectRatio: 'square',
       mood: 'mysterious',
@@ -140,7 +141,7 @@ export default function ImageGenerator() {
     if (!hasSufficientCredits) {
         toast({
             title: "Insufficient Credits",
-            description: `You don't have enough credits for the ${modelValue === 'google-imagen' ? 'Google Imagen 3' : 'Pollinations'} model. Please upgrade your plan.`,
+            description: `You don't have enough credits for the ${values.model === 'google-imagen' ? 'Google Imagen 3' : 'Pollinations'} model. Please upgrade your plan.`,
             variant: "destructive"
         });
         return;
@@ -238,8 +239,8 @@ export default function ImageGenerator() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
-                                <SelectItem value="google-imagen">Google Imagen 3 (Best Quality)</SelectItem>
-                                <SelectItem value="pollinations">Pollinations (Alternative)</SelectItem>
+                                <SelectItem value="pollinations">Pollinations (Free Trial)</SelectItem>
+                                <SelectItem value="google-imagen" disabled={activePlan.tier === 0}>Google Imagen 3 (Premium)</SelectItem>
                             </SelectContent>
                         </Select>
                     </FormItem>
@@ -526,3 +527,5 @@ export default function ImageGenerator() {
     </div>
   );
 }
+
+    
