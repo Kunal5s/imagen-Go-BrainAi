@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Image as ImageIcon, Sparkles, Wand2, Aperture, Ratio, Smile, Sun, Palette, Medal, Loader2, Star, AlertTriangle, Download } from 'lucide-react';
+import { Image as ImageIcon, Sparkles, Wand2, Aperture, Ratio, Smile, Sun, Palette, Medal, Loader2, Star, AlertTriangle, Download, Cpu } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { generateImages } from "@/ai/flows/image-generation-flow";
@@ -39,6 +39,7 @@ import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
+  model: z.string(),
   artisticStyle: z.string(),
   aspectRatio: z.string(),
   mood: z.string(),
@@ -82,6 +83,7 @@ export default function ImageGenerator() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: 'A majestic lion wearing a crown, sitting on a throne in a cosmic library.',
+      model: 'gemini',
       artisticStyle: 'photographic',
       aspectRatio: 'square',
       mood: 'mysterious',
@@ -93,45 +95,48 @@ export default function ImageGenerator() {
 
   const { setValue, watch } = form;
   const qualityValue = watch('quality');
+  const modelValue = watch('model');
   const aspectRatioValue = watch('aspectRatio');
-  const creditCost = getCreditCost(qualityValue) * IMAGES_PER_GENERATION;
+  const creditCost = modelValue === 'gemini' ? getCreditCost(qualityValue) * IMAGES_PER_GENERATION : 0;
   const hasSufficientCredits = totalCredits >= creditCost;
 
   useEffect(() => {
-    // Automatically set quality based on the highest available plan
-    if (activePlan.name === 'Mega') {
-      setValue('quality', 'uhd');
-    } else if (activePlan.name === 'Pro') {
-      setValue('quality', 'hd');
-    } else {
-      setValue('quality', 'standard');
+    // Automatically set quality based on the highest available plan if using Gemini
+    if (modelValue === 'gemini') {
+        if (activePlan.name === 'Mega') {
+            setValue('quality', 'uhd');
+        } else if (activePlan.name === 'Pro') {
+            setValue('quality', 'hd');
+        } else {
+            setValue('quality', 'standard');
+        }
     }
-  }, [activePlan, setValue]);
+  }, [activePlan, setValue, modelValue]);
 
   const onSubmit = async (values: FormValues) => {
-    if (!user) {
+    if (!user && values.model === 'gemini') {
         toast({
             title: "Login Required",
-            description: "Please log in to start generating images.",
+            description: "Please log in to use the Gemini model.",
             variant: "destructive"
         });
         openPlanModal();
         return;
     }
 
-    if (isFreeTierExhausted) {
+    if (values.model === 'gemini' && isFreeTierExhausted) {
         toast({
             title: "Free Tier Exhausted",
-            description: "You have used all your free daily credits for this 30-day period. Please upgrade to a paid plan.",
+            description: "You have used all your free daily credits for this 30-day period. Please upgrade a plan or use the free Pollinations model.",
             variant: "destructive"
         });
         return;
     }
 
-    if (!hasSufficientCredits) {
+    if (values.model === 'gemini' && !hasSufficientCredits) {
         toast({
             title: "Insufficient Credits",
-            description: "You don't have enough credits for this generation. Please upgrade your plan.",
+            description: "You don't have enough credits for this generation. Please upgrade your plan or use the free Pollinations model.",
             variant: "destructive"
         });
         return;
@@ -143,11 +148,18 @@ export default function ImageGenerator() {
     try {
       const result = await generateImages(values);
       setGeneratedImages(result);
-      deductCredits(creditCost);
-      toast({
-        title: "Success!",
-        description: `${creditCost} credits were deducted from your account.`,
-      });
+      if (values.model === 'gemini') {
+        deductCredits(creditCost);
+        toast({
+            title: "Success!",
+            description: `${creditCost} credits were deducted from your account.`,
+        });
+      } else {
+         toast({
+            title: "Success!",
+            description: `Your images were generated with Pollinations.`,
+        });
+      }
     } catch (error) {
       console.error("Image generation failed:", error);
       toast({
@@ -161,6 +173,8 @@ export default function ImageGenerator() {
   };
   
   const aspectRatioClass = getAspectRatioClass(aspectRatioValue);
+
+  const isGenerateDisabled = isLoading || (modelValue === 'gemini' && (!hasSufficientCredits || isFreeTierExhausted));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -191,6 +205,19 @@ export default function ImageGenerator() {
                     </FormItem>
                   )}
                 />
+                
+                <FormField control={form.control} name="model" render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="font-semibold flex items-center gap-2"><Cpu className="h-5 w-5 text-primary" /> Model</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>
+                                <SelectItem value="gemini">Gemini Flash (Best Quality)</SelectItem>
+                                <SelectItem value="pollinations">Pollinations (Free &amp; Unlimited)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </FormItem>
+                )} />
 
                 <div className="space-y-4">
                   <Label className="font-semibold flex items-center gap-2">
@@ -349,7 +376,7 @@ export default function ImageGenerator() {
                             <Select 
                               onValueChange={field.onChange} 
                               value={field.value} 
-                              disabled={activePlan.name === 'Free' || activePlan.name === 'Booster Pack'}
+                              disabled={modelValue === 'pollinations' || activePlan.name === 'Free' || activePlan.name === 'Booster Pack'}
                             >
                                 <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                 <SelectContent>
@@ -370,10 +397,10 @@ export default function ImageGenerator() {
                           {creditCost} Credits
                       </p>
                       <p className="text-xs text-muted-foreground">
-                          Cost for {IMAGES_PER_GENERATION} images at {qualityValue} quality
+                         {modelValue === 'gemini' ? `Cost for ${IMAGES_PER_GENERATION} images at ${qualityValue} quality` : 'Pollinations is free & unlimited'}
                       </p>
                   </div>
-                <Button type="submit" disabled={isLoading || !hasSufficientCredits || isFreeTierExhausted} size="lg">
+                <Button type="submit" disabled={isGenerateDisabled} size="lg">
                   {isLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
@@ -403,6 +430,8 @@ export default function ImageGenerator() {
                   <a 
                     key={index}
                     href={src}
+                    target="_blank" 
+                    rel="noopener noreferrer"
                     download={`imagen-go-brainai-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}-${index + 1}.png`}
                     className={cn(
                       "block rounded-lg overflow-hidden group relative shadow-md",
@@ -416,7 +445,8 @@ export default function ImageGenerator() {
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1280px) 33vw, 20vw"
                       className="object-cover group-hover:opacity-80 transition-opacity" 
-                      data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')} 
+                      data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')}
+                      unoptimized={modelValue === 'pollinations'}
                     />
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                       <Download className="h-12 w-12 text-white" />
@@ -426,25 +456,25 @@ export default function ImageGenerator() {
               </div>
             ) : (
                <div className="flex flex-col items-center justify-center text-muted-foreground p-8">
-                {!user ? (
+                {modelValue === 'gemini' && !user ? (
                    <>
                       <ImageIcon className="h-16 w-16 mb-4" />
                       <p className="font-semibold text-lg">Login to start creating.</p>
-                      <p className="text-sm max-w-xs">Please log in to generate images and use your credits.</p>
+                      <p className="text-sm max-w-xs">Please log in to generate images with the Gemini model.</p>
                       <Button onClick={openPlanModal} className="mt-4">Login</Button>
                    </>
-                ) : isFreeTierExhausted ? (
+                ) : modelValue === 'gemini' && isFreeTierExhausted ? (
                   <>
                     <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
                     <p className="font-semibold text-lg">Free Generations Exhausted</p>
-                    <p className="text-sm max-w-xs">You have used your free daily credits for this 30-day period. Please upgrade your plan to continue.</p>
+                    <p className="text-sm max-w-xs">You have used your free daily credits for Gemini. Upgrade your plan or switch to the Pollinations model.</p>
                     <Button onClick={() => { const pricing = document.getElementById('pricing'); pricing?.scrollIntoView({behavior: 'smooth'}); }} className="mt-4">Upgrade Plan</Button>
                   </>
-                ) : !hasSufficientCredits ? (
+                ) : modelValue === 'gemini' && !hasSufficientCredits ? (
                   <>
                     <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
                     <p className="font-semibold text-lg">You don't have enough credits.</p>
-                    <p className="text-sm max-w-xs">Your current balance is {totalCredits}, but this generation costs {creditCost}. Please upgrade your plan to continue.</p>
+                    <p className="text-sm max-w-xs">Your current balance is {totalCredits}, but this generation costs {creditCost}. Upgrade your plan or switch to the Pollinations model.</p>
                     <Button onClick={() => { const pricing = document.getElementById('pricing'); pricing?.scrollIntoView({behavior: 'smooth'}); }} className="mt-4">Upgrade Plan</Button>
                   </>
                 ) : (

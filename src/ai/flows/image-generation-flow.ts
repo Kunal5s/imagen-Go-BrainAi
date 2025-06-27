@@ -12,6 +12,7 @@ import { z } from 'zod';
 
 const ImageGenerationInputSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
+  model: z.string(),
   artisticStyle: z.string(),
   aspectRatio: z.string(),
   mood: z.string(),
@@ -48,8 +49,24 @@ const generateImagesFlow = ai.defineFlow(
     if (input.colorPalette && input.colorPalette !== 'default') {
       promptParts.push(input.colorPalette);
     }
+    
+    // The model should understand aspect ratio from text.
+    promptParts.push(input.aspectRatio);
 
-    // Add quality keywords based on the selected plan
+    if (input.model === 'pollinations') {
+        const fullPrompt = promptParts.filter(Boolean).join(', ');
+        const encodedPrompt = encodeURIComponent(fullPrompt);
+
+        // Generate 5 images in parallel from Pollinations
+        const imageUrls = Array(5).fill(null).map(() => {
+            const seed = Math.floor(Math.random() * 1000000); // Add random seed for variation
+            return `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}`;
+        });
+        return imageUrls;
+    }
+
+
+    // Default to Gemini model
     switch (input.quality) {
       case 'hd':
         promptParts.push('high quality');
@@ -68,9 +85,6 @@ const generateImagesFlow = ai.defineFlow(
         promptParts.push('1080p');
         break;
     }
-
-    // The model should understand aspect ratio from text.
-    promptParts.push(input.aspectRatio);
 
     const fullPrompt = promptParts.filter(Boolean).join(', ');
     
