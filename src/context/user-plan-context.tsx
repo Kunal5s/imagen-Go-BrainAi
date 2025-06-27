@@ -83,13 +83,13 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     const today = new Date().toISOString().split('T')[0];
 
     if (!userData) {
-      // First time user - give them free trial credits
+      // First time user - give them free trial credits for Pollinations
       const freeTrialPurchase: PlanPurchase = {
         id: uuidv4(),
         planName: 'Free Trial',
         purchaseDate: new Date().toISOString(),
-        googleImagenCreditsAdded: 20,
-        googleImagenCreditsRemaining: 20,
+        googleImagenCreditsAdded: 0,
+        googleImagenCreditsRemaining: 0,
         pollinationsCreditsAdded: 20,
         pollinationsCreditsRemaining: 20,
       };

@@ -20,10 +20,10 @@ export const pricingPlans: Plan[] = [
     id: 'free',
     name: 'Free',
     price: 0,
-    googleImagenCredits: 20,
+    googleImagenCredits: 0,
     pollinationsCredits: 20,
     description: 'For starters and hobbyists.',
-    features: ['20 Google Imagen 3 credits', '20 Pollinations credits', 'Standard Quality generations', 'Upgrade for more credits & features'],
+    features: ['20 Pollinations credits (Free Trial)', 'Standard Quality generations', 'Upgrade to use Google Imagen 3'],
     cta: 'Your Current Plan',
     popular: false,
     purchaseLink: ''
