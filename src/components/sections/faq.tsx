@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     question: "Is there a free trial?",
-    answer: "Yes, we offer a free plan that includes 10 generations per day. It's a great way to experience the power of Imagen Go BrainAi and see how it fits into your workflow."
+    answer: "We have a Free plan that allows you to explore the interface, but you will need to upgrade to a paid plan to receive credits and generate images."
   },
   {
     question: "What payment methods do you accept?",
@@ -24,15 +24,15 @@ const faqs = [
   },
   {
     question: "Can I cancel my subscription at any time?",
-    answer: "Yes, you can cancel your subscription at any time. You will retain access to your plan's features until the end of the current billing cycle."
+    answer: "Yes, you can cancel your monthly subscription at any time. You will retain access to your plan's credits until the end of the current 30-day cycle. Booster Pack credits do not expire."
   },
   {
     question: "How many images are generated per prompt?",
-    answer: "Our platform generates four unique image variations for every prompt you enter. This gives you a range of options to choose from and helps you find the perfect visual representation of your idea faster."
+    answer: "Our platform generates five unique image variations for every prompt you enter. This gives you a range of options to choose from and helps you find the perfect visual representation of your idea faster."
   },
   {
     question: "What image resolutions are supported?",
-    answer: "Our plans support various resolutions. The Free plan offers Standard Quality (1080p), while our Pro and Mega plans provide up to 4K Ultra-High Quality for crystal-clear, professional-grade images."
+    answer: "Our plans support various resolutions. The Pro plan provides HD (2K) quality, while our Mega plan provides up to 4K Ultra-High Quality for crystal-clear, professional-grade images."
   },
   {
     question: "Can I use the generated images for commercial purposes?",
@@ -40,11 +40,11 @@ const faqs = [
   },
   {
     question: "How does the credit system work?",
-    answer: "Credits are used to generate images. One credit typically equals one generation quad. Our paid plans come with a monthly credit allowance, and you can purchase Booster Packs if you need more."
+    answer: "Credits are used to pay for image generations. Each model (Google Imagen 3, Pollinations) has a different cost per generation. Paid plans provide you with a monthly allowance of credits for each model, and you can purchase Booster Packs if you need more."
   },
   {
     question: "Do you store my generated images?",
-    answer: "Yes, your generated images are saved to your personal gallery, allowing you to access, view, and download them at any time from your account."
+    answer: "The application does not currently store your generated images in a personal gallery. You should download any images you wish to keep immediately after they are generated."
   }
 ]
 

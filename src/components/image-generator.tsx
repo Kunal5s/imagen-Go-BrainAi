@@ -76,14 +76,14 @@ const getAspectRatioClass = (ratio: string) => {
 export default function ImageGenerator() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, totalCredits, getCreditCost, deductCredits, activePlan, openPlanModal, isFreeTierExhausted } = useUserPlan();
+  const { user, totalGoogleImagenCredits, totalPollinationsCredits, getCreditCost, deductCredits, activePlan, openPlanModal, isLoginLocked } = useUserPlan();
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: 'A majestic lion wearing a crown, sitting on a throne in a cosmic library.',
-      model: 'gemini',
+      model: 'google-imagen',
       artisticStyle: 'photographic',
       aspectRatio: 'square',
       mood: 'mysterious',
@@ -95,14 +95,16 @@ export default function ImageGenerator() {
 
   const { setValue, watch } = form;
   const qualityValue = watch('quality');
-  const modelValue = watch('model');
+  const modelValue = watch('model') as 'google-imagen' | 'pollinations';
   const aspectRatioValue = watch('aspectRatio');
-  const creditCost = modelValue === 'gemini' ? getCreditCost(qualityValue) * IMAGES_PER_GENERATION : 0;
-  const hasSufficientCredits = totalCredits >= creditCost;
+  const creditCost = getCreditCost(qualityValue, modelValue);
+  
+  const hasSufficientCredits = modelValue === 'google-imagen' 
+    ? totalGoogleImagenCredits >= creditCost 
+    : totalPollinationsCredits >= creditCost;
 
   useEffect(() => {
-    // Automatically set quality based on the highest available plan if using Gemini
-    if (modelValue === 'gemini') {
+    if (modelValue === 'google-imagen') {
         if (activePlan.name === 'Mega') {
             setValue('quality', 'uhd');
         } else if (activePlan.name === 'Pro') {
@@ -114,29 +116,30 @@ export default function ImageGenerator() {
   }, [activePlan, setValue, modelValue]);
 
   const onSubmit = async (values: FormValues) => {
-    if (!user && values.model === 'gemini') {
+    if (!user) {
         toast({
             title: "Login Required",
-            description: "Please log in to use the Gemini model.",
+            description: "Please log in to generate images.",
             variant: "destructive"
         });
         openPlanModal();
         return;
     }
 
-    if (values.model === 'gemini' && isFreeTierExhausted) {
+    if (isLoginLocked) {
         toast({
-            title: "Free Tier Exhausted",
-            description: "You have used all your free daily credits for this 30-day period. Please upgrade a plan or use the free Pollinations model.",
+            title: "Free Account Limit Reached",
+            description: "You have logged in too many times with this free account. Please upgrade to a paid plan.",
             variant: "destructive"
         });
+        openPlanModal();
         return;
     }
 
-    if (values.model === 'gemini' && !hasSufficientCredits) {
+    if (!hasSufficientCredits) {
         toast({
             title: "Insufficient Credits",
-            description: "You don't have enough credits for this generation. Please upgrade your plan or use the free Pollinations model.",
+            description: `You don't have enough credits for the ${modelValue === 'google-imagen' ? 'Google Imagen 3' : 'Pollinations'} model. Please upgrade your plan.`,
             variant: "destructive"
         });
         return;
@@ -148,18 +151,11 @@ export default function ImageGenerator() {
     try {
       const result = await generateImages(values);
       setGeneratedImages(result);
-      if (values.model === 'gemini') {
-        deductCredits(creditCost);
-        toast({
-            title: "Success!",
-            description: `${creditCost} credits were deducted from your account.`,
-        });
-      } else {
-         toast({
-            title: "Success!",
-            description: `Your images were generated with Pollinations.`,
-        });
-      }
+      deductCredits(creditCost, values.model as 'google-imagen' | 'pollinations');
+      toast({
+          title: "Success!",
+          description: `${creditCost} ${values.model === 'google-imagen' ? 'Google Imagen 3' : 'Pollinations'} credits were deducted.`,
+      });
     } catch (error) {
       console.error("Image generation failed:", error);
       toast({
@@ -174,7 +170,7 @@ export default function ImageGenerator() {
   
   const aspectRatioClass = getAspectRatioClass(aspectRatioValue);
 
-  const isGenerateDisabled = isLoading || (modelValue === 'gemini' && (!hasSufficientCredits || isFreeTierExhausted));
+  const isGenerateDisabled = isLoading || !hasSufficientCredits || isLoginLocked;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -212,8 +208,8 @@ export default function ImageGenerator() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
-                                <SelectItem value="gemini">Gemini Flash (Best Quality)</SelectItem>
-                                <SelectItem value="pollinations">Pollinations (Free &amp; Unlimited)</SelectItem>
+                                <SelectItem value="google-imagen">Google Imagen 3 (Best Quality)</SelectItem>
+                                <SelectItem value="pollinations">Pollinations (Alternative)</SelectItem>
                             </SelectContent>
                         </Select>
                     </FormItem>
@@ -376,7 +372,7 @@ export default function ImageGenerator() {
                             <Select 
                               onValueChange={field.onChange} 
                               value={field.value} 
-                              disabled={modelValue === 'pollinations' || activePlan.name === 'Free' || activePlan.name === 'Booster Pack'}
+                              disabled={modelValue === 'pollinations' || activePlan.tier < 2}
                             >
                                 <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                 <SelectContent>
@@ -397,7 +393,7 @@ export default function ImageGenerator() {
                           {creditCost} Credits
                       </p>
                       <p className="text-xs text-muted-foreground">
-                         {modelValue === 'gemini' ? `Cost for ${IMAGES_PER_GENERATION} images at ${qualityValue} quality` : 'Pollinations is free & unlimited'}
+                         Cost for {IMAGES_PER_GENERATION} images with {modelValue === 'google-imagen' ? 'Google Imagen 3' : 'Pollinations'}
                       </p>
                   </div>
                 <Button type="submit" disabled={isGenerateDisabled} size="lg">
@@ -456,25 +452,27 @@ export default function ImageGenerator() {
               </div>
             ) : (
                <div className="flex flex-col items-center justify-center text-muted-foreground p-8">
-                {modelValue === 'gemini' && !user ? (
+                {!user ? (
                    <>
                       <ImageIcon className="h-16 w-16 mb-4" />
                       <p className="font-semibold text-lg">Login to start creating.</p>
-                      <p className="text-sm max-w-xs">Please log in to generate images with the Gemini model.</p>
+                      <p className="text-sm max-w-xs">Please log in to generate images.</p>
                       <Button onClick={openPlanModal} className="mt-4">Login</Button>
                    </>
-                ) : modelValue === 'gemini' && isFreeTierExhausted ? (
+                ) : isLoginLocked ? (
                   <>
                     <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
-                    <p className="font-semibold text-lg">Free Generations Exhausted</p>
-                    <p className="text-sm max-w-xs">You have used your free daily credits for Gemini. Upgrade your plan or switch to the Pollinations model.</p>
+                    <p className="font-semibold text-lg">Free Account Limit Reached</p>
+                    <p className="text-sm max-w-xs">You have logged in with this free account too many times. Please upgrade your plan to continue generating.</p>
                     <Button onClick={() => { const pricing = document.getElementById('pricing'); pricing?.scrollIntoView({behavior: 'smooth'}); }} className="mt-4">Upgrade Plan</Button>
                   </>
-                ) : modelValue === 'gemini' && !hasSufficientCredits ? (
+                ) : !hasSufficientCredits ? (
                   <>
                     <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
                     <p className="font-semibold text-lg">You don't have enough credits.</p>
-                    <p className="text-sm max-w-xs">Your current balance is {totalCredits}, but this generation costs {creditCost}. Upgrade your plan or switch to the Pollinations model.</p>
+                    <p className="text-sm max-w-xs">
+                        Your current balance for the selected model is not enough for this generation. Please upgrade or buy a booster pack.
+                    </p>
                     <Button onClick={() => { const pricing = document.getElementById('pricing'); pricing?.scrollIntoView({behavior: 'smooth'}); }} className="mt-4">Upgrade Plan</Button>
                   </>
                 ) : (

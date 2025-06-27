@@ -4,7 +4,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUserPlan } from '@/context/user-plan-context';
-import { getPlanById } from '@/lib/plans';
+import { getPlanById, Plan } from '@/lib/plans';
 import { Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ function PurchaseSuccessContent() {
   const { user, purchasePlan, login } = useUserPlan();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [errorMessage, setErrorMessage] = useState('');
+  const [purchasedPlan, setPurchasedPlan] = useState<Plan | null>(null);
 
   useEffect(() => {
     const planId = searchParams.get('plan_id');
@@ -34,6 +35,7 @@ function PurchaseSuccessContent() {
       setStatus('error');
       return;
     }
+    setPurchasedPlan(plan);
 
     // If the user context has loaded, we can process the purchase
     if (user) {
@@ -46,7 +48,7 @@ function PurchaseSuccessContent() {
         return;
       }
 
-      purchasePlan(plan.name, plan.credits);
+      purchasePlan(plan);
       setStatus('success');
     } else if (emailFromUrl) {
       // If user is not loaded but we have an email, log them in. The effect will re-run.
@@ -89,7 +91,7 @@ function PurchaseSuccessContent() {
           {status === 'success' && (
             <>
               <CheckCircle className="h-16 w-16 text-green-500" />
-              <CardDescription>Your plan has been activated. You can now use your new credits.</CardDescription>
+              <CardDescription>Your '{purchasedPlan?.name}' plan has been activated. You can now use your new credits.</CardDescription>
               <Button onClick={() => router.push('/generate')}>Start Creating</Button>
             </>
           )}

@@ -26,7 +26,7 @@ interface ActivePlanModalProps {
 const allowedDomains = ["@gmail.com", "@yahoo.com"];
 
 export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModalProps) {
-  const { user, totalCredits, purchasedCredits, login, logout, isFreeTierExhausted, lastUsedEmail } = useUserPlan();
+  const { user, totalGoogleImagenCredits, totalPollinationsCredits, login, logout, isLoginLocked, lastUsedEmail, activePlan } = useUserPlan();
   const [email, setEmail] = useState('');
   const { toast } = useToast();
 
@@ -85,19 +85,25 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
             <ul className="divide-y">
                 {sortedHistory.map((p) => {
                     const expiryDate = new Date(new Date(p.purchaseDate).setDate(new Date(p.purchaseDate).getDate() + 30));
-                    const isExpired = new Date() > expiryDate;
+                    const isExpired = p.planName !== 'Booster Pack' && new Date() > expiryDate;
                     return (
                         <li key={p.id} className={`py-2 ${isExpired ? 'opacity-50' : ''}`}>
-                            <div className="flex justify-between items-center">
-                                <p className="font-medium">{p.planName}</p>
-                                <p className="text-sm font-semibold">{p.remainingCredits} / {p.creditsAdded} left</p>
+                            <div className="flex justify-between items-center font-medium">
+                                <p>{p.planName}</p>
+                                <p className="text-sm">{p.googleImagenCreditsRemaining + p.pollinationsCreditsRemaining} credits left</p>
                             </div>
-                            <p className="text-sm text-muted-foreground">
+                             <div className="text-xs text-muted-foreground space-y-1 mt-1">
+                                <p>Google Imagen 3: {p.googleImagenCreditsRemaining} / {p.googleImagenCreditsAdded}</p>
+                                <p>Pollinations: {p.pollinationsCreditsRemaining} / {p.pollinationsCreditsAdded}</p>
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
                                 Purchased on {format(new Date(p.purchaseDate), 'PPP')}
                             </p>
-                            <p className={`text-xs ${isExpired ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                {isExpired ? `Expired on ${format(expiryDate, 'PPP')}` : `Expires on ${format(expiryDate, 'PPP')}`}
-                            </p>
+                            {p.planName !== 'Booster Pack' && (
+                                <p className={`text-xs ${isExpired ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                    {isExpired ? `Expired on ${format(expiryDate, 'PPP')}` : `Expires on ${format(expiryDate, 'PPP')}`}
+                                </p>
+                            )}
                         </li>
                     )
                 })}
@@ -122,12 +128,12 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
         
         {user ? (
           <div className="space-y-4">
-             {isFreeTierExhausted && (
+             {isLoginLocked && activePlan.tier === 0 &&(
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Free Tier Limit Reached</AlertTitle>
+                <AlertTitle>Free Account Limit Reached</AlertTitle>
                 <AlertDescription>
-                  You have used all your free daily credits for this 30-day period. Please upgrade to a paid plan to continue.
+                  You have logged in with this free account more than 6 times in the last 30 days. Please upgrade to a paid plan to continue.
                 </AlertDescription>
               </Alert>
             )}
@@ -135,12 +141,15 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
               <Label>Current Email</Label>
               <p className="font-semibold">{user.email}</p>
             </div>
-            <div>
-              <Label>Total Credits Available</Label>
-              <p className="text-2xl font-bold">{totalCredits}</p>
-              <p className="text-xs text-muted-foreground">
-                Includes {user.dailyCredits} daily credits and {purchasedCredits} purchased credits.
-              </p>
+            <div className='grid grid-cols-2 gap-4'>
+                <div>
+                    <Label>Google Imagen 3 Credits</Label>
+                    <p className="text-2xl font-bold">{totalGoogleImagenCredits}</p>
+                </div>
+                 <div>
+                    <Label>Pollinations Credits</Label>
+                    <p className="text-2xl font-bold">{totalPollinationsCredits}</p>
+                </div>
             </div>
             {renderPlanHistory(user.planHistory)}
             <Button onClick={handleLogout} variant="outline" className="w-full">

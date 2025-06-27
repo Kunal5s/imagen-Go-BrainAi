@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUserPlan } from '@/context/user-plan-context';
 import { useToast } from '@/hooks/use-toast';
-import { pricingPlans } from '@/lib/plans';
+import { pricingPlans, Plan } from '@/lib/plans';
 
 export default function PricingSection() {
   const { user, openPlanModal } = useUserPlan();
   const { toast } = useToast();
 
-  const handlePurchase = (plan: typeof pricingPlans[0]) => {
+  const handlePurchase = (plan: Plan) => {
     if (plan.id === 'free' || !plan.purchaseLink) return;
 
     if (!user) {
