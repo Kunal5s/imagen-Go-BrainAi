@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -85,7 +86,9 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
             <ul className="divide-y">
                 {sortedHistory.map((p) => {
                     const expiryDate = new Date(new Date(p.purchaseDate).setDate(new Date(p.purchaseDate).getDate() + 30));
-                    const isExpired = p.planName !== 'Booster Pack' && new Date() > expiryDate;
+                    const isSubscription = p.planName !== 'Booster Pack' && p.planName !== 'Free Trial';
+                    const isExpired = isSubscription && new Date() > expiryDate;
+                    
                     return (
                         <li key={p.id} className={`py-2 ${isExpired ? 'opacity-50' : ''}`}>
                             <div className="flex justify-between items-center font-medium">
@@ -99,7 +102,7 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
                             <p className="text-sm text-muted-foreground mt-1">
                                 Purchased on {format(new Date(p.purchaseDate), 'PPP')}
                             </p>
-                            {p.planName !== 'Booster Pack' && (
+                            {isSubscription && (
                                 <p className={`text-xs ${isExpired ? 'text-destructive' : 'text-muted-foreground'}`}>
                                     {isExpired ? `Expired on ${format(expiryDate, 'PPP')}` : `Expires on ${format(expiryDate, 'PPP')}`}
                                 </p>

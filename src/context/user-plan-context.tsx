@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
@@ -45,6 +46,7 @@ const LOGIN_PERIOD_DAYS = 30;
 
 const PLAN_TIERS: { [key: string]: number } = {
     'Free': 0,
+    'Free Trial': 0,
     'Booster Pack': 1,
     'Pro': 2,
     'Mega': 3
@@ -81,10 +83,19 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     const today = new Date().toISOString().split('T')[0];
 
     if (!userData) {
-      // First time user
+      // First time user - give them free trial credits
+      const freeTrialPurchase: PlanPurchase = {
+        id: uuidv4(),
+        planName: 'Free Trial',
+        purchaseDate: new Date().toISOString(),
+        googleImagenCreditsAdded: 20,
+        googleImagenCreditsRemaining: 20,
+        pollinationsCreditsAdded: 20,
+        pollinationsCreditsRemaining: 20,
+      };
       userData = {
         email,
-        planHistory: [],
+        planHistory: [freeTrialPurchase],
         lastLoginDate: today,
         loginHistory: [today],
       };
@@ -169,7 +180,7 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     const now = new Date();
     const activePurchases = user.planHistory.filter(p => {
         const purchaseDate = new Date(p.purchaseDate);
-        if (p.planName === 'Booster Pack') return true; // Booster packs don't expire
+        if (p.planName === 'Booster Pack' || p.planName === 'Free Trial') return true; // These don't expire
         const expiryDate = new Date(new Date(p.purchaseDate).setDate(purchaseDate.getDate() + 30));
         return now < expiryDate;
     });
@@ -178,7 +189,7 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     const currentPollinationsCredits = activePurchases.reduce((sum, p) => sum + p.pollinationsCreditsRemaining, 0);
 
     const highestTierPlan = activePurchases
-        .filter(p => p.planName !== 'Booster Pack')
+        .filter(p => p.planName !== 'Booster Pack' && p.planName !== 'Free Trial')
         .reduce((max, p) => (PLAN_TIERS[p.planName] > PLAN_TIERS[max.planName] ? p : max), { planName: 'Free' } as PlanPurchase);
 
     const planDetails = {
@@ -212,7 +223,7 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     const activePurchases = updatedPlanHistory
         .map((p, index) => ({ ...p, originalIndex: index }))
         .filter(p => {
-            if (p.planName === 'Booster Pack') return true;
+            if (p.planName === 'Booster Pack' || p.planName === 'Free Trial') return true;
             const purchaseDate = new Date(p.purchaseDate);
             const expiryDate = new Date(new Date(p.purchaseDate).setDate(purchaseDate.getDate() + 30));
             return now < expiryDate;
