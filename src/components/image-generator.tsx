@@ -76,6 +76,7 @@ const getAspectRatioClass = (ratio: string) => {
 export default function ImageGenerator() {
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [downloading, setDownloading] = useState<string | null>(null);
   const { user, totalGoogleImagenCredits, totalPollinationsCredits, getCreditCost, deductCredits, activePlan, openPlanModal, isLoginLocked } = useUserPlan();
   const { toast } = useToast();
 
@@ -165,6 +166,35 @@ export default function ImageGenerator() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const handleDownload = async (url: string, filename: string) => {
+    if (downloading) return;
+    setDownloading(url);
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+      toast({
+        title: "Download Failed",
+        description: "Could not download the image directly. Please try right-clicking to save it.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloading(null);
     }
   };
   
@@ -422,33 +452,39 @@ export default function ImageGenerator() {
                 </div>
             ) : generatedImages.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                {generatedImages.map((src, index) => (
-                  <a 
-                    key={index}
-                    href={src}
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    download={`imagen-go-brainai-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}-${index + 1}.png`}
-                    className={cn(
-                      "block rounded-lg overflow-hidden group relative shadow-md",
-                      aspectRatioClass
-                    )}
-                    title="Click to download"
-                  >
-                    <Image 
-                      src={src} 
-                      alt={`Generated image ${index + 1}`} 
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1280px) 33vw, 20vw"
-                      className="object-cover group-hover:opacity-80 transition-opacity" 
-                      data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')}
-                      unoptimized={modelValue === 'pollinations'}
-                    />
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <Download className="h-12 w-12 text-white" />
+                {generatedImages.map((src, index) => {
+                  const isDownloadingThis = downloading === src;
+                  const filename = `imagen-go-brainai-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}-${index + 1}.png`;
+                  return (
+                    <div 
+                      key={index}
+                      onClick={() => !isDownloadingThis && handleDownload(src, filename)}
+                      className={cn(
+                        "block rounded-lg overflow-hidden group relative shadow-md",
+                        isDownloadingThis ? 'cursor-wait' : 'cursor-pointer',
+                        aspectRatioClass
+                      )}
+                      title="Click to download"
+                    >
+                      <Image 
+                        src={src} 
+                        alt={`Generated image ${index + 1}`} 
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1280px) 33vw, 20vw"
+                        className="object-cover group-hover:opacity-80 transition-opacity" 
+                        data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')}
+                        unoptimized={modelValue === 'pollinations'}
+                      />
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        {isDownloadingThis ? (
+                          <Loader2 className="h-12 w-12 text-white animate-spin" />
+                        ) : (
+                          <Download className="h-12 w-12 text-white" />
+                        )}
+                      </div>
                     </div>
-                  </a>
-                ))}
+                  )
+                })}
               </div>
             ) : (
                <div className="flex flex-col items-center justify-center text-muted-foreground p-8">

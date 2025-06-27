@@ -31,6 +31,28 @@ export async function generateImages(input: ImageGenerationInput): Promise<Image
   return generateImagesFlow(input);
 }
 
+const getDimensionsForRatio = (ratio: string): { width: number, height: number } => {
+    // Using a common base size for consistency
+    switch (ratio) {
+        case 'square': return { width: 1024, height: 1024 };
+        case 'portrait': return { width: 576, height: 1024 };
+        case 'landscape': return { width: 1024, height: 576 };
+        case 'widescreen': return { width: 1280, height: 549 };
+        case 'ultrawide': return { width: 1280, height: 360 };
+        case 'photo-portrait': return { width: 819, height: 1024 };
+        case 'photo-landscape': return { width: 1024, height: 683 };
+        case 'cinema-scope': return { width: 1280, height: 535 };
+        case 'mobile-vertical': return { width: 819, height: 1024 };
+        case 'desktop-wallpaper': return { width: 1024, height: 640 };
+        case 'a4-paper': return { width: 724, height: 1024 };
+        case 'instagram-story': return { width: 576, height: 1024 };
+        case 'facebook-post': return { width: 1024, height: 536 };
+        case 'twitter-post': return { width: 1024, height: 576 };
+        case 'pinterest-pin': return { width: 683, height: 1024 };
+        default: return { width: 1024, height: 1024 };
+    }
+};
+
 const generateImagesFlow = ai.defineFlow(
   {
     name: 'generateImagesFlow',
@@ -56,11 +78,12 @@ const generateImagesFlow = ai.defineFlow(
     if (input.model === 'pollinations') {
         const fullPrompt = promptParts.filter(Boolean).join(', ');
         const encodedPrompt = encodeURIComponent(fullPrompt);
+        const { width, height } = getDimensionsForRatio(input.aspectRatio);
 
         // Generate 5 images in parallel from Pollinations
         const imageUrls = Array(5).fill(null).map(() => {
             const seed = Math.floor(Math.random() * 1000000); // Add random seed for variation
-            return `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}&nologo=true`;
+            return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
         });
         return imageUrls;
     }
