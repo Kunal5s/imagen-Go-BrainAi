@@ -1,10 +1,20 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
 export default function PrivacyPolicyPage() {
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    setCurrentDate(new Date().toLocaleDateString());
+  }, []);
+
   return (
     <div className="bg-background">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-3xl mx-auto prose dark:prose-invert">
           <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
-          <p>Last updated: {new Date().toLocaleDateString()}</p>
+          <p>Last updated: {currentDate}</p>
 
           <p>
             Imagen Go BrainAi ("us", "we", or "our") operates the Imagen Go BrainAi website (the "Service"). This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.

@@ -1,10 +1,20 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
 export default function TermsOfServicePage() {
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    setCurrentDate(new Date().toLocaleDateString());
+  }, []);
+
   return (
     <div className="bg-background">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-3xl mx-auto prose dark:prose-invert">
           <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
-          <p>Last updated: {new Date().toLocaleDateString()}</p>
+          <p>Last updated: {currentDate}</p>
 
           <p>
             Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the Imagen Go BrainAi website (the "Service") operated by Imagen Go BrainAi ("us", "we", or "our").

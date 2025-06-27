@@ -1,10 +1,20 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
 export default function DisclaimerPage() {
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    setCurrentDate(new Date().toLocaleDateString());
+  }, []);
+
   return (
     <div className="bg-background">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-3xl mx-auto prose dark:prose-invert">
           <h1 className="text-4xl font-bold mb-8">Disclaimer</h1>
-          <p>Last updated: {new Date().toLocaleDateString()}</p>
+          <p>Last updated: {currentDate}</p>
 
           <p>
             The information provided by Imagen Go BrainAi ("we," "us," or "our") on this website (the "Service") is for general informational purposes only. All information on the Service is provided in good faith, however we make no representation or warranty of any kind, express or implied, regarding the accuracy, adequacy, validity, reliability, availability, or completeness of any information on the Service.
