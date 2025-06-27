@@ -60,7 +60,7 @@ const generateImagesFlow = ai.defineFlow(
         // Generate 5 images in parallel from Pollinations
         const imageUrls = Array(5).fill(null).map(() => {
             const seed = Math.floor(Math.random() * 1000000); // Add random seed for variation
-            return `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}`;
+            return `https://image.pollinations.ai/prompt/${encodedPrompt}?seed=${seed}&nologo=true`;
         });
         return imageUrls;
     }
