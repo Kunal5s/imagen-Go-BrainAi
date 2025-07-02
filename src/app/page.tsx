@@ -4,6 +4,7 @@ import { Zap, Film, Image as ImageIcon } from 'lucide-react';
 import ImageGenerator from '@/components/image-generator';
 import Link from 'next/link';
 import FaqSection from '@/components/sections/faq';
+import PricingSection from '@/components/sections/pricing';
 
 function HeroSection() {
     return (
@@ -84,6 +85,7 @@ export default function Home() {
         <ImageGenerator />
       </div>
       <WhyChooseSection />
+      <PricingSection />
       <FaqSection />
     </>
   );
