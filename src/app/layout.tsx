@@ -3,7 +3,6 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
-import { UserPlanProvider } from '@/context/user-plan-context';
 
 export const metadata: Metadata = {
   title: 'Imagen Go BrainAi: AI Image Generator',
@@ -24,14 +23,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></link>
       </head>
       <body className="font-body antialiased">
-        <UserPlanProvider>
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow">{children}</main>
             <Footer />
           </div>
           <Toaster />
-        </UserPlanProvider>
       </body>
     </html>
   );

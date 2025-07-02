@@ -1,8 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Zap, Layers, Palette } from 'lucide-react';
-import PricingSection from '@/components/sections/pricing';
-import FaqSection from '@/components/sections/faq';
 import ImageGenerator from '@/components/image-generator';
 import Link from 'next/link';
 
@@ -79,14 +77,12 @@ export default function Home() {
         <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Try It Now</h2>
             <p className="max-w-3xl mx-auto text-muted-foreground mt-4 text-base md:text-lg">
-                No account needed to try. Enter a prompt below to see the magic happen.
+                Enter a prompt below to see the magic happen.
             </p>
         </div>
         <ImageGenerator />
       </div>
       <WhyChooseSection />
-      <PricingSection />
-      <FaqSection />
     </>
   );
 }

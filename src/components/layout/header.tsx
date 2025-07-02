@@ -2,26 +2,21 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { BrainCircuit, Menu, User } from 'lucide-react';
+import { BrainCircuit, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useUserPlan } from '@/context/user-plan-context';
-import ActivePlanModal from '../active-plan-modal';
 
 const navLinks = [
   { href: '/generate', label: 'Generate Image' },
   { href: '/about', label: 'About Us' },
   { href: '/contact', label: 'Contact Us' },
-  { href: '/#pricing', label: 'Pricing' },
 ];
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, isPlanModalOpen, setPlanModalOpen } = useUserPlan();
 
   return (
     <>
-      <ActivePlanModal isOpen={isPlanModalOpen} onOpenChange={setPlanModalOpen} />
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-7xl items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 font-bold">
@@ -39,14 +34,6 @@ export default function Header() {
           </nav>
           
           <div className="flex items-center gap-2">
-            <Button
-              variant={user ? "secondary" : "default"}
-              onClick={() => setPlanModalOpen(true)}
-            >
-              <User className="h-4 w-4 mr-2" />
-              {user ? 'Active Plan' : 'Login'}
-            </Button>
-
             <div className="md:hidden">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
