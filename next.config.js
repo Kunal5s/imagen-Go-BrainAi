@@ -16,7 +16,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'image.pollinations.ai',
+        hostname: 'replicate.delivery',
         port: '',
         pathname: '/**',
       }

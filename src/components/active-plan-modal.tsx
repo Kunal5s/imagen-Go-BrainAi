@@ -27,7 +27,7 @@ interface ActivePlanModalProps {
 const allowedDomains = ["@gmail.com", "@yahoo.com"];
 
 export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModalProps) {
-  const { user, totalGoogleImagenCredits, totalPollinationsCredits, login, logout, isLoginLocked, lastUsedEmail, activePlan } = useUserPlan();
+  const { user, totalCredits, login, logout, isLoginLocked, lastUsedEmail, activePlan } = useUserPlan();
   const [email, setEmail] = useState('');
   const { toast } = useToast();
 
@@ -93,11 +93,10 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
                         <li key={p.id} className={`py-2 ${isExpired ? 'opacity-50' : ''}`}>
                             <div className="flex justify-between items-center font-medium">
                                 <p>{p.planName}</p>
-                                <p className="text-sm">{p.googleImagenCreditsRemaining + p.pollinationsCreditsRemaining} credits left</p>
+                                <p className="text-sm">{p.creditsRemaining} credits left</p>
                             </div>
-                             <div className="text-xs text-muted-foreground space-y-1 mt-1">
-                                <p>Google Imagen 3: {p.googleImagenCreditsRemaining} / {p.googleImagenCreditsAdded}</p>
-                                <p>Pollinations: {p.pollinationsCreditsRemaining} / {p.pollinationsCreditsAdded}</p>
+                            <div className="text-xs text-muted-foreground space-y-1 mt-1">
+                                <p>Generation Credits: {p.creditsRemaining} / {p.creditsAdded}</p>
                             </div>
                             <p className="text-sm text-muted-foreground mt-1">
                                 Purchased on {format(new Date(p.purchaseDate), 'PPP')}
@@ -144,15 +143,9 @@ export default function ActivePlanModal({ isOpen, onOpenChange }: ActivePlanModa
               <Label>Current Email</Label>
               <p className="font-semibold">{user.email}</p>
             </div>
-            <div className='grid grid-cols-2 gap-4'>
-                <div>
-                    <Label>Google Imagen 3 Credits</Label>
-                    <p className="text-2xl font-bold">{totalGoogleImagenCredits}</p>
-                </div>
-                 <div>
-                    <Label>Pollinations Credits</Label>
-                    <p className="text-2xl font-bold">{totalPollinationsCredits}</p>
-                </div>
+            <div>
+                <Label>Total Generation Credits</Label>
+                <p className="text-2xl font-bold">{totalCredits}</p>
             </div>
             {renderPlanHistory(user.planHistory)}
             <Button onClick={handleLogout} variant="outline" className="w-full">

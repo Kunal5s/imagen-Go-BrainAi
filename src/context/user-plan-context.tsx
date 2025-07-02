@@ -9,10 +9,8 @@ export interface PlanPurchase {
   id: string;
   planName: string;
   purchaseDate: string;
-  googleImagenCreditsAdded: number;
-  googleImagenCreditsRemaining: number;
-  pollinationsCreditsAdded: number;
-  pollinationsCreditsRemaining: number;
+  creditsAdded: number;
+  creditsRemaining: number;
 }
 
 export interface User {
@@ -25,16 +23,15 @@ export interface User {
 interface UserPlanContextType {
   user: User | null;
   activePlan: { name: string, tier: number };
-  totalGoogleImagenCredits: number;
-  totalPollinationsCredits: number;
+  totalCredits: number;
   isPlanModalOpen: boolean;
   isLoginLocked: boolean;
   lastUsedEmail: string | null;
   login: (email: string) => void;
   logout: () => void;
   purchasePlan: (plan: Plan) => void;
-  deductCredits: (amount: number, model: 'google-imagen' | 'pollinations') => void;
-  getCreditCost: (quality: string, model: 'google-imagen' | 'pollinations') => number;
+  deductCredits: (amount: number) => void;
+  getCreditCost: (type: 'image' | 'video') => number;
   setPlanModalOpen: (isOpen: boolean) => void;
   openPlanModal: () => void;
 }
@@ -83,15 +80,13 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     const today = new Date().toISOString().split('T')[0];
 
     if (!userData) {
-      // First time user - give them free trial credits for Pollinations
+      // First time user - give them free trial credits
       const freeTrialPurchase: PlanPurchase = {
         id: uuidv4(),
         planName: 'Free Trial',
         purchaseDate: new Date().toISOString(),
-        googleImagenCreditsAdded: 0,
-        googleImagenCreditsRemaining: 0,
-        pollinationsCreditsAdded: 20,
-        pollinationsCreditsRemaining: 20,
+        creditsAdded: 20,
+        creditsRemaining: 20,
       };
       userData = {
         email,
@@ -152,10 +147,8 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
       id: uuidv4(),
       planName: plan.name,
       purchaseDate: new Date().toISOString(),
-      googleImagenCreditsAdded: plan.googleImagenCredits,
-      googleImagenCreditsRemaining: plan.googleImagenCredits,
-      pollinationsCreditsAdded: plan.pollinationsCredits,
-      pollinationsCreditsRemaining: plan.pollinationsCredits,
+      creditsAdded: plan.generationCredits,
+      creditsRemaining: plan.generationCredits,
     };
 
     const updatedUser = {
@@ -167,12 +160,11 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     updateUserInStorage(updatedUser);
   };
 
-  const { activePlan, totalGoogleImagenCredits, totalPollinationsCredits, isLoginLocked } = useMemo(() => {
+  const { activePlan, totalCredits, isLoginLocked } = useMemo(() => {
     if (!user) {
         return {
             activePlan: { name: 'Free', tier: 0 },
-            totalGoogleImagenCredits: 0,
-            totalPollinationsCredits: 0,
+            totalCredits: 0,
             isLoginLocked: false,
         };
     }
@@ -185,8 +177,7 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
         return now < expiryDate;
     });
 
-    const currentGoogleImagenCredits = activePurchases.reduce((sum, p) => sum + p.googleImagenCreditsRemaining, 0);
-    const currentPollinationsCredits = activePurchases.reduce((sum, p) => sum + p.pollinationsCreditsRemaining, 0);
+    const currentTotalCredits = activePurchases.reduce((sum, p) => sum + p.creditsRemaining, 0);
 
     const highestTierPlan = activePurchases
         .filter(p => p.planName !== 'Booster Pack' && p.planName !== 'Free Trial')
@@ -204,17 +195,13 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     
     return {
         activePlan: planDetails,
-        totalGoogleImagenCredits: currentGoogleImagenCredits,
-        totalPollinationsCredits: currentPollinationsCredits,
+        totalCredits: currentTotalCredits,
         isLoginLocked: loginLocked,
     };
   }, [user]);
   
-  const deductCredits = (amount: number, model: 'google-imagen' | 'pollinations') => {
-    if (!user) return;
-    
-    const creditsToDeduct = model === 'google-imagen' ? totalGoogleImagenCredits : totalPollinationsCredits;
-    if (creditsToDeduct < amount) return;
+  const deductCredits = (amount: number) => {
+    if (!user || totalCredits < amount) return;
 
     let amountToDeduct = amount;
     const updatedPlanHistory = [...user.planHistory];
@@ -233,15 +220,9 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     for (const purchase of activePurchases) {
         if (amountToDeduct === 0) break;
 
-        if (model === 'google-imagen') {
-            const creditsToUse = Math.min(amountToDeduct, purchase.googleImagenCreditsRemaining);
-            updatedPlanHistory[purchase.originalIndex].googleImagenCreditsRemaining -= creditsToUse;
-            amountToDeduct -= creditsToUse;
-        } else { // 'pollinations'
-            const creditsToUse = Math.min(amountToDeduct, purchase.pollinationsCreditsRemaining);
-            updatedPlanHistory[purchase.originalIndex].pollinationsCreditsRemaining -= creditsToUse;
-            amountToDeduct -= creditsToUse;
-        }
+        const creditsToUse = Math.min(amountToDeduct, purchase.creditsRemaining);
+        updatedPlanHistory[purchase.originalIndex].creditsRemaining -= creditsToUse;
+        amountToDeduct -= creditsToUse;
     }
     
     const updatedUser = {
@@ -252,21 +233,15 @@ export const UserPlanProvider = ({ children }: { children: React.ReactNode }) =>
     updateUserInStorage(updatedUser);
   };
   
-  const getCreditCost = (quality: string, model: 'google-imagen' | 'pollinations'): number => {
-    if (model === 'pollinations') {
-        return 20; // Per generation
-    }
-
-    // Google Imagen Costs
-    if (quality === 'uhd') return 90; // Per generation
-    if (quality === 'hd') return 50; // Per generation
-    return 10; // Standard quality per generation
+  const getCreditCost = (type: 'image' | 'video'): number => {
+    if (type === 'video') return 50;
+    return 20; // image cost
   };
 
   const openPlanModal = () => setPlanModalOpen(true);
 
   return (
-    <UserPlanContext.Provider value={{ user, activePlan, totalGoogleImagenCredits, totalPollinationsCredits, isPlanModalOpen, isLoginLocked, lastUsedEmail, login, logout, purchasePlan, deductCredits, getCreditCost, setPlanModalOpen, openPlanModal }}>
+    <UserPlanContext.Provider value={{ user, activePlan, totalCredits, isPlanModalOpen, isLoginLocked, lastUsedEmail, login, logout, purchasePlan, deductCredits, getCreditCost, setPlanModalOpen, openPlanModal }}>
       {children}
     </UserPlanContext.Provider>
   );

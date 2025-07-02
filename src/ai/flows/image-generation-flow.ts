@@ -1,158 +1,66 @@
 'use server';
 /**
- * @fileOverview An AI flow for generating images based on a user's prompt and creative settings.
+ * @fileOverview An AI flow for generating images and videos using Replicate.
  *
- * - generateImages - A function that handles the image generation process.
- * - ImageGenerationInput - The input type for the generateImages function.
- * - ImageGenerationOutput - The return type for the generateImages function.
+ * - generateMedia - A function that handles the media generation process.
+ * - MediaGenerationInput - The input type for the generateMedia function.
+ * - MediaGenerationOutput - The return type for the generateMedia function.
  */
 
-import { ai } from '@/ai/genkit';
+import Replicate from 'replicate';
 import { z } from 'zod';
 
-const ImageGenerationInputSchema = z.object({
-  prompt: z.string().min(1, 'Prompt is required.'),
-  model: z.string(),
-  artisticStyle: z.string(),
-  aspectRatio: z.string(),
-  mood: z.string(),
-  lighting: z.string(),
-  colorPalette: z.string(),
-  quality: z.string(),
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_KEY,
 });
-export type ImageGenerationInput = z.infer<typeof ImageGenerationInputSchema>;
 
-// The output will be an array of 5 image data URIs (strings)
-const ImageGenerationOutputSchema = z.array(z.string());
-export type ImageGenerationOutput = z.infer<typeof ImageGenerationOutputSchema>;
+const MediaGenerationInputSchema = z.object({
+  prompt: z.string().min(1, 'Prompt is required.'),
+  model: z.string().min(1, 'Model is required.'),
+});
+export type MediaGenerationInput = z.infer<typeof MediaGenerationInputSchema>;
+
+const MediaGenerationOutputSchema = z.object({
+    type: z.enum(['image', 'video']),
+    url: z.string().url(),
+});
+export type MediaGenerationOutput = z.infer<typeof MediaGenerationOutputSchema>;
+
+// A map to determine if a model is a video model
+const videoModels = new Set([
+    'stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172638',
+    'anotherjesse/zeroscope-v2-xl:71996d331e8ede8ef7bd76eba9fae076d31792e4ddf4ad057779b443d6aea62f',
+    'lucataco/animate-diff-sdxl:b6182a4d34f0a9e22472b86370258163f4a05f15d3159042b0051e59273c524b',
+    'deforum/deforum_api:0621e21b0e004481b213c6baf538a502c30b135b1c5c644c9b914a8f94950b73',
+    'cjwbw/modelscope-t2v:8153b527fa6a37fb33418c322b7d43b2f5c229712128711818274a7b458b9f71'
+]);
 
 
-export async function generateImages(input: ImageGenerationInput): Promise<ImageGenerationOutput> {
-  return generateImagesFlow(input);
-}
-
-const getDimensionsForRatio = (ratio: string): { width: number, height: number } => {
-    // Using a common base size for consistency
-    switch (ratio) {
-        case 'square': return { width: 1024, height: 1024 };
-        case 'portrait': return { width: 576, height: 1024 };
-        case 'landscape': return { width: 1024, height: 576 };
-        case 'widescreen': return { width: 1280, height: 549 };
-        case 'ultrawide': return { width: 1280, height: 360 };
-        case 'photo-portrait': return { width: 819, height: 1024 };
-        case 'photo-landscape': return { width: 1024, height: 683 };
-        case 'cinema-scope': return { width: 1280, height: 535 };
-        case 'mobile-vertical': return { width: 819, height: 1024 };
-        case 'desktop-wallpaper': return { width: 1024, height: 640 };
-        case 'a4-paper': return { width: 724, height: 1024 };
-        case 'instagram-story': return { width: 576, height: 1024 };
-        case 'facebook-post': return { width: 1024, height: 536 };
-        case 'twitter-post': return { width: 1024, height: 576 };
-        case 'pinterest-pin': return { width: 683, height: 1024 };
-        default: return { width: 1024, height: 1024 };
-    }
-};
-
-const generateImagesFlow = ai.defineFlow(
-  {
-    name: 'generateImagesFlow',
-    inputSchema: ImageGenerationInputSchema,
-    outputSchema: ImageGenerationOutputSchema,
-  },
-  async (input) => {
-    // Construct a more effective, comma-separated prompt for the image generation model.
-    const promptParts = [
-      input.prompt,
-      input.artisticStyle,
-      input.mood,
-      input.lighting,
-    ];
-
-    if (input.colorPalette && input.colorPalette !== 'default') {
-      promptParts.push(input.colorPalette);
-    }
-    
-    // The model should understand aspect ratio from text.
-    promptParts.push(input.aspectRatio);
-
-    if (input.model === 'pollinations') {
-        const fullPrompt = promptParts.filter(Boolean).join(', ');
-        const encodedPrompt = encodeURIComponent(fullPrompt);
-        const { width, height } = getDimensionsForRatio(input.aspectRatio);
-
-        // Generate 5 images in parallel from Pollinations
-        const imageUrls = Array(5).fill(null).map(() => {
-            const seed = Math.floor(Math.random() * 1000000); // Add random seed for variation
-            return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+export async function generateMedia(input: MediaGenerationInput): Promise<MediaGenerationOutput> {
+    try {
+        console.log(`Generating with model: ${input.model}`);
+        const output = await replicate.run(input.model as `${string}/${string}:${string}`, {
+            input: {
+                prompt: input.prompt,
+            },
         });
-        return imageUrls;
-    }
+        
+        console.log('Received output from Replicate:', output);
 
-
-    // Default to Google Imagen model
-    if (input.model === 'google-imagen') {
-        switch (input.quality) {
-          case 'hd':
-            promptParts.push('high quality');
-            promptParts.push('detailed');
-            promptParts.push('2K resolution');
-            break;
-          case 'uhd':
-            promptParts.push('ultra high quality');
-            promptParts.push('4K resolution');
-            promptParts.push('photorealistic');
-            promptParts.push('hyper-detailed');
-            break;
-          default:
-            // Standard quality
-            promptParts.push('standard definition');
-            promptParts.push('1080p');
-            break;
+        if (!output || (Array.isArray(output) && output.length === 0) || typeof output[0] !== 'string') {
+            throw new Error('Invalid output received from Replicate API.');
         }
 
-        const fullPrompt = promptParts.filter(Boolean).join(', ');
-        
-        // Generate 5 images in parallel
-        const imagePromises = Array(5).fill(null).map(() => 
-          ai.generate({
-            model: 'googleai/gemini-2.0-flash-preview-image-generation',
-            prompt: fullPrompt,
-            config: {
-              responseModalities: ['TEXT', 'IMAGE'],
-               safetySettings: [
-                {
-                  category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-                  threshold: 'BLOCK_NONE',
-                },
-                {
-                  category: 'HARM_CATEGORY_HATE_SPEECH',
-                  threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-                },
-                {
-                  category: 'HARM_CATEGORY_HARASSMENT',
-                  threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-                },
-                {
-                  category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-                  threshold: 'BLOCK_MEDIUM_AND_ABOVE',
-                },
-              ],
-            },
-          })
-        );
+        const mediaUrl = Array.isArray(output) ? output[0] : String(output);
+        const mediaType = videoModels.has(input.model) ? 'video' : 'image';
 
-        const results = await Promise.all(imagePromises);
-        
-        const imageUrls = results.map(result => {
-            if (!result.media || !result.media.url) {
-                throw new Error('Image generation failed to return a valid image.');
-            }
-            return result.media.url;
-        });
+        return {
+            type: mediaType,
+            url: mediaUrl,
+        };
 
-        return imageUrls;
+    } catch(error) {
+        console.error("Replicate API Error:", error);
+        throw new Error("Failed to generate media. The model may have failed or an API error occurred.");
     }
-    
-    throw new Error(`Unsupported model: ${input.model}`);
-  }
-);
+}

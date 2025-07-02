@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -28,100 +28,69 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Image as ImageIcon, Sparkles, Wand2, Aperture, Ratio, Smile, Sun, Palette, Medal, Loader2, Star, AlertTriangle, Download, Cpu } from 'lucide-react';
+import { Image as ImageIcon, Sparkles, Wand2, Loader2, AlertTriangle, Download, Cpu, Video } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
-import { generateImages } from "@/ai/flows/image-generation-flow";
+import { generateMedia, MediaGenerationOutput } from "@/ai/flows/image-generation-flow";
 import { useUserPlan } from '@/context/user-plan-context';
 import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
-  model: z.string(),
-  artisticStyle: z.string(),
-  aspectRatio: z.string(),
-  mood: z.string(),
-  lighting: z.string(),
-  colorPalette: z.string(),
-  quality: z.string(),
+  model: z.string().min(1, 'Model is required.'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
-const IMAGES_PER_GENERATION = 5;
 
-const getAspectRatioClass = (ratio: string) => {
-    switch (ratio) {
-        case 'square': return 'aspect-square';
-        case 'portrait': return 'aspect-[9/16]';
-        case 'landscape': return 'aspect-[16/9]';
-        case 'widescreen': return 'aspect-[21/9]';
-        case 'ultrawide': return 'aspect-[32/9]';
-        case 'photo-portrait': return 'aspect-[4/5]';
-        case 'photo-landscape': return 'aspect-[3/2]';
-        case 'cinema-scope': return 'aspect-[2.39/1]';
-        case 'mobile-vertical': return 'aspect-[4/5]';
-        case 'desktop-wallpaper': return 'aspect-[16/10]';
-        case 'a4-paper': return 'aspect-[1/1.41]';
-        case 'instagram-story': return 'aspect-[9/16]';
-        case 'facebook-post': return 'aspect-[1.91/1]';
-        case 'twitter-post': return 'aspect-[16/9]';
-        case 'pinterest-pin': return 'aspect-[2/3]';
-        default: return 'aspect-square';
-    }
-};
+const imageModels = [
+    { name: "Stable Diffusion XL", id: "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de791de18060315f5cb400e263d80c0" },
+    { name: "Realistic Vision v6.0", id: "lucataco/realistic-vision-v60-b1:5a8cb5b672f7a07f27715d262c5b35582f3484f997635649988450035043d191" },
+    { name: "DreamShaper v8", id: "lykon/dreamshaper-8:b43d7b3223193e449915998b31372e020d57e510255b1f07e4d830b1348e5a7b" },
+    { name: "OpenJourney", id: "prompthero/openjourney:9936c2001faa2194a261c01381f90e65261879985476014a0a37a3345923d243" },
+    { name: "Deliberate v2", id: "proximasan/deliberate-v2:ee5c6f642468f615383a54a73744a569562767093258c067a6d89953051a6291" },
+];
 
+const videoModels = [
+    { name: "Stable Video Diffusion", id: "stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172638" },
+    { name: "Zeroscope v2 XL", id: "anotherjesse/zeroscope-v2-xl:71996d331e8ede8ef7bd76eba9fae076d31792e4ddf4ad057779b443d6aea62f" },
+    { name: "AnimateDiff SDXL", id: "lucataco/animate-diff-sdxl:b6182a4d34f0a9e22472b86370258163f4a05f15d3159042b0051e59273c524b" },
+    { name: "Deforum", id: "deforum/deforum_api:0621e21b0e004481b213c6baf538a502c30b135b1c5c644c9b914a8f94950b73" },
+    { name: "ModelScope Text-to-Video", id: "cjwbw/modelscope-t2v:8153b527fa6a37fb33418c322b7d43b2f5c229712128711818274a7b458b9f71" },
+];
+
+const allModels = [...imageModels, ...videoModels];
 
 export default function ImageGenerator() {
-  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [generatedMedia, setGeneratedMedia] = useState<MediaGenerationOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
-  const { user, totalGoogleImagenCredits, totalPollinationsCredits, getCreditCost, deductCredits, activePlan, openPlanModal, isLoginLocked } = useUserPlan();
+  const { user, totalCredits, getCreditCost, deductCredits, openPlanModal, isLoginLocked } = useUserPlan();
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: 'A majestic lion wearing a crown, sitting on a throne in a cosmic library.',
-      model: 'pollinations',
-      artisticStyle: 'photographic',
-      aspectRatio: 'square',
-      mood: 'mysterious',
-      lighting: 'cinematic',
-      colorPalette: 'default',
-      quality: 'standard',
+      model: imageModels[0].id,
     },
   });
 
-  const { setValue, watch } = form;
-  const qualityValue = watch('quality');
-  const modelValue = watch('model') as 'google-imagen' | 'pollinations';
-  const aspectRatioValue = watch('aspectRatio');
-  const creditCost = getCreditCost(qualityValue, modelValue);
+  const { watch } = form;
+  const modelValue = watch('model');
   
-  const hasSufficientCredits = modelValue === 'google-imagen' 
-    ? totalGoogleImagenCredits >= creditCost 
-    : totalPollinationsCredits >= creditCost;
-
-  useEffect(() => {
-    if (modelValue === 'google-imagen') {
-        if (activePlan.name === 'Mega') {
-            setValue('quality', 'uhd');
-        } else if (activePlan.name === 'Pro') {
-            setValue('quality', 'hd');
-        } else {
-            setValue('quality', 'standard');
-        }
-    }
-  }, [activePlan, setValue, modelValue]);
+  const isVideoModel = videoModels.some(m => m.id === modelValue);
+  const creditCost = getCreditCost(isVideoModel ? 'video' : 'image');
+  
+  const hasSufficientCredits = totalCredits >= creditCost;
 
   const onSubmit = async (values: FormValues) => {
     if (!user) {
         toast({
             title: "Login Required",
-            description: "Please log in to generate images.",
+            description: "Please log in to generate images or videos.",
             variant: "destructive"
         });
         openPlanModal();
@@ -131,7 +100,7 @@ export default function ImageGenerator() {
     if (isLoginLocked) {
         toast({
             title: "Free Account Limit Reached",
-            description: "You have logged in too many times with this free account. Please upgrade to a paid plan.",
+            description: "You have used your free account too many times. Please upgrade to a paid plan.",
             variant: "destructive"
         });
         openPlanModal();
@@ -141,28 +110,28 @@ export default function ImageGenerator() {
     if (!hasSufficientCredits) {
         toast({
             title: "Insufficient Credits",
-            description: `You don't have enough credits for the ${values.model === 'google-imagen' ? 'Google Imagen 3' : 'Pollinations'} model. Please upgrade your plan.`,
+            description: `You don't have enough credits for this generation. Please upgrade your plan.`,
             variant: "destructive"
         });
         return;
     }
 
     setIsLoading(true);
-    setGeneratedImages([]);
+    setGeneratedMedia(null);
     
     try {
-      const result = await generateImages(values);
-      setGeneratedImages(result);
-      deductCredits(creditCost, values.model as 'google-imagen' | 'pollinations');
+      const result = await generateMedia(values);
+      setGeneratedMedia(result);
+      deductCredits(creditCost);
       toast({
           title: "Success!",
-          description: `${creditCost} ${values.model === 'google-imagen' ? 'Google Imagen 3' : 'Pollinations'} credits were deducted.`,
+          description: `${creditCost} credits were deducted for your generation.`,
       });
     } catch (error) {
-      console.error("Image generation failed:", error);
+      console.error("Media generation failed:", error);
       toast({
-        title: "Error Generating Images",
-        description: "The AI was unable to generate images for this prompt. This can happen due to safety filters or other issues. Please try a different prompt.",
+        title: "Error Generating Media",
+        description: error instanceof Error ? error.message : "An unknown error occurred. Please try a different prompt or model.",
         variant: "destructive",
       });
     } finally {
@@ -174,6 +143,7 @@ export default function ImageGenerator() {
     if (downloading) return;
     setDownloading(url);
     try {
+      // Use fetch to get blob for direct download, bypassing CORS issues with simple links
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -191,7 +161,7 @@ export default function ImageGenerator() {
       console.error("Download failed:", error);
       toast({
         title: "Download Failed",
-        description: "Could not download the image directly. Please try right-clicking to save it.",
+        description: "Could not download the media. Please try right-clicking to save it.",
         variant: "destructive",
       });
     } finally {
@@ -199,8 +169,6 @@ export default function ImageGenerator() {
     }
   };
   
-  const aspectRatioClass = getAspectRatioClass(aspectRatioValue);
-
   const isGenerateDisabled = isLoading || !hasSufficientCredits || isLoginLocked;
 
   return (
@@ -212,7 +180,7 @@ export default function ImageGenerator() {
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <CardHeader>
                 <CardTitle>Generation Settings</CardTitle>
-                <CardDescription>Fine-tune your creation.</CardDescription>
+                <CardDescription>Describe your vision.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <FormField
@@ -223,7 +191,7 @@ export default function ImageGenerator() {
                       <FormLabel className="font-semibold">Your Prompt</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="A majestic lion wearing a crown, sitting on a throne in a cosmic library."
+                          placeholder="A majestic lion wearing a crown..."
                           className="min-h-[120px] resize-none"
                           {...field}
                         />
@@ -239,183 +207,22 @@ export default function ImageGenerator() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
-                                <SelectItem value="pollinations">Pollinations (Free Trial)</SelectItem>
-                                <SelectItem value="google-imagen" disabled={activePlan.tier === 0}>Google Imagen 3 (Premium)</SelectItem>
+                                <SelectGroup>
+                                    <FormLabel className="px-2 py-1.5 text-xs font-semibold">Image Models</FormLabel>
+                                    {imageModels.map(model => (
+                                        <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
+                                    ))}
+                                </SelectGroup>
+                                <SelectGroup>
+                                     <FormLabel className="px-2 py-1.5 text-xs font-semibold">Video Models</FormLabel>
+                                    {videoModels.map(model => (
+                                        <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
+                                    ))}
+                                </SelectGroup>
                             </SelectContent>
                         </Select>
                     </FormItem>
                 )} />
-
-                <div className="space-y-4">
-                  <Label className="font-semibold flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    Creative Controls
-                  </Label>
-                  <div className="grid grid-cols-1 gap-4">
-                    <FormField control={form.control} name="artisticStyle" render={({ field }) => (
-                      <FormItem>
-                          <FormLabel className="flex items-center gap-2 text-xs text-muted-foreground"><Aperture className="h-4 w-4" /> Artistic Style</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                  <SelectItem value="photographic">Photographic</SelectItem>
-                                  <SelectItem value="cinematic">Cinematic</SelectItem>
-                                  <SelectItem value="anime">Anime</SelectItem>
-                                  <SelectItem value="fantasy">Fantasy Art</SelectItem>
-                                  <SelectItem value="3d">3D Render</SelectItem>
-                                  <SelectItem value="comic-book">Comic Book</SelectItem>
-                                  <SelectItem value="watercolor">Watercolor</SelectItem>
-                                  <SelectItem value="line-art">Line Art</SelectItem>
-                                  <SelectItem value="isometric">Isometric</SelectItem>
-                                  <SelectItem value="pixel-art">Pixel Art</SelectItem>
-                                  <SelectItem value="surrealism">Surrealism</SelectItem>
-                                  <SelectItem value="minimalism">Minimalism</SelectItem>
-                                  <SelectItem value="impressionism">Impressionism</SelectItem>
-                                  <SelectItem value="expressionism">Expressionism</SelectItem>
-                                  <SelectItem value="steampunk">Steampunk</SelectItem>
-                                  <SelectItem value="cyberpunk">Cyberpunk</SelectItem>
-                                  <SelectItem value="pop-art">Pop Art</SelectItem>
-                                  <SelectItem value="art-nouveau">Art Nouveau</SelectItem>
-                                  <SelectItem value="graffiti">Graffiti</SelectItem>
-                                  <SelectItem value="claymation">Claymation</SelectItem>
-                              </SelectContent>
-                          </Select>
-                      </FormItem>
-                    )} />
-                    <FormField control={form.control} name="aspectRatio" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="flex items-center gap-2 text-xs text-muted-foreground"><Ratio className="h-4 w-4" /> Aspect Ratio</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="square">Square (1:1)</SelectItem>
-                                    <SelectItem value="portrait">Portrait (9:16)</SelectItem>
-                                    <SelectItem value="landscape">Landscape (16:9)</SelectItem>
-                                    <SelectItem value="widescreen">Widescreen (21:9)</SelectItem>
-                                    <SelectItem value="ultrawide">Ultrawide (32:9)</SelectItem>
-                                    <SelectItem value="photo-portrait">Photo Portrait (4:5)</SelectItem>
-                                    <SelectItem value="photo-landscape">Photo Landscape (3:2)</SelectItem>
-                                    <SelectItem value="cinema-scope">CinemaScope (2.39:1)</SelectItem>
-                                    <SelectItem value="mobile-vertical">Mobile Vertical (4:5)</SelectItem>
-                                    <SelectItem value="desktop-wallpaper">Desktop Wallpaper (16:10)</SelectItem>
-                                    <SelectItem value="a4-paper">A4 Paper</SelectItem>
-                                    <SelectItem value="instagram-story">Instagram Story (9:16)</SelectItem>
-                                    <SelectItem value="facebook-post">Facebook Post (1.91:1)</SelectItem>
-                                    <SelectItem value="twitter-post">Twitter Post (16:9)</SelectItem>
-                                    <SelectItem value="pinterest-pin">Pinterest Pin (2:3)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </FormItem>
-                    )} />
-                    <FormField control={form.control} name="mood" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="flex items-center gap-2 text-xs text-muted-foreground"><Smile className="h-4 w-4" /> Mood</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="mysterious">Mysterious</SelectItem>
-                                    <SelectItem value="happy">Happy</SelectItem>
-                                    <SelectItem value="dramatic">Dramatic</SelectItem>
-                                    <SelectItem value="calm">Calm</SelectItem>
-                                    <SelectItem value="energetic">Energetic</SelectItem>
-                                    <SelectItem value="romantic">Romantic</SelectItem>
-                                    <SelectItem value="somber">Somber</SelectItem>
-                                    <SelectItem value="whimsical">Whimsical</SelectItem>
-                                    <SelectItem value="eerie">Eerie</SelectItem>
-                                    <SelectItem value="powerful">Powerful</SelectItem>
-                                    <SelectItem value="nostalgic">Nostalgic</SelectItem>
-                                    <SelectItem value="dreamy">Dreamy</SelectItem>
-                                    <SelectItem value="chaotic">Chaotic</SelectItem>
-                                    <SelectItem value="peaceful">Peaceful</SelectItem>
-                                    <SelectItem value="playful">Playful</SelectItem>
-                                    <SelectItem value="melancholic">Melancholic</SelectItem>
-                                    <SelectItem value="opulent">Opulent</SelectItem>
-                                    <SelectItem value="futuristic">Futuristic</SelectItem>
-                                    <SelectItem value="rustic">Rustic</SelectItem>
-                                    <SelectItem value="serene">Serene</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </FormItem>
-                    )} />
-                    <FormField control={form.control} name="lighting" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="flex items-center gap-2 text-xs text-muted-foreground"><Sun className="h-4 w-4" /> Lighting</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="cinematic">Cinematic</SelectItem>
-                                    <SelectItem value="natural">Natural</SelectItem>
-                                    <SelectItem value="studio">Studio</SelectItem>
-                                    <SelectItem value="dramatic">Dramatic</SelectItem>
-                                    <SelectItem value="soft">Soft</SelectItem>
-                                    <SelectItem value="hard">Hard</SelectItem>
-                                    <SelectItem value="backlight">Backlight</SelectItem>
-                                    <SelectItem value="golden-hour">Golden Hour</SelectItem>
-                                    <SelectItem value="neon">Neon</SelectItem>
-                                    <SelectItem value="moonlight">Moonlight</SelectItem>
-                                    <SelectItem value="ambient">Ambient</SelectItem>
-                                    <SelectItem value="rim-lighting">Rim Lighting</SelectItem>
-                                    <SelectItem value="volumetric">Volumetric</SelectItem>
-                                    <SelectItem value="low-key">Low-key</SelectItem>
-                                    <SelectItem value="high-key">High-key</SelectItem>
-                                    <SelectItem value="underwater">Underwater</SelectItem>
-                                    <SelectItem value="spotlight">Spotlight</SelectItem>
-                                    <SelectItem value="candlelight">Candlelight</SelectItem>
-                                    <SelectItem value="bioluminescent">Bioluminescent</SelectItem>
-                                    <SelectItem value="firelight">Firelight</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </FormItem>
-                    )} />
-                    <FormField control={form.control} name="colorPalette" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="flex items-center gap-2 text-xs text-muted-foreground"><Palette className="h-4 w-4" /> Color Palette</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="default">Default</SelectItem>
-                                    <SelectItem value="vibrant">Vibrant</SelectItem>
-                                    <SelectItem value="monochrome">Monochrome</SelectItem>
-                                    <SelectItem value="pastel">Pastel</SelectItem>
-                                    <SelectItem value="earth-tones">Earth Tones</SelectItem>
-                                    <SelectItem value="jewel-tones">Jewel Tones</SelectItem>
-                                    <SelectItem value="cool">Cool</SelectItem>
-                                    <SelectItem value="warm">Warm</SelectItem>
-                                    <SelectItem value="sepia">Sepia</SelectItem>
-                                    <SelectItem value="inverted">Inverted</SelectItem>
-                                    <SelectItem value="technicolor">Technicolor</SelectItem>
-                                    <SelectItem value="gradient">Gradient</SelectItem>
-                                    <SelectItem value="neon-noir">Neon Noir</SelectItem>
-                                    <SelectItem value="cyber-glow">Cyber Glow</SelectItem>
-                                    <SelectItem value="muted-tones">Muted Tones</SelectItem>
-                                    <SelectItem value="high-contrast">High Contrast</SelectItem>
-                                    <SelectItem value="solarized">Solarized</SelectItem>
-                                    <SelectItem value="vintage">Vintage</SelectItem>
-                                    <SelectItem value="triadic">Triadic</SelectItem>
-                                    <SelectItem value="analogous">Analogous</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </FormItem>
-                    )} />
-                    <FormField control={form.control} name="quality" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="flex items-center gap-2 text-xs text-muted-foreground"><Medal className="h-4 w-4" /> Quality</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
-                              value={field.value} 
-                              disabled={modelValue === 'pollinations' || activePlan.tier < 2}
-                            >
-                                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                    <SelectItem value="standard">Standard (1080p)</SelectItem>
-                                    <SelectItem value="hd" disabled={activePlan.tier < 2}>HD (2K)</SelectItem>
-                                    <SelectItem value="uhd" disabled={activePlan.tier < 3}>Ultra HD (4K)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </FormItem>
-                    )} />
-                  </div>
-                </div>
 
               </CardContent>
               <CardFooter className="flex-col items-stretch gap-4">
@@ -424,16 +231,16 @@ export default function ImageGenerator() {
                           {creditCost} Credits
                       </p>
                       <p className="text-xs text-muted-foreground">
-                         Cost for {IMAGES_PER_GENERATION} images with {modelValue === 'google-imagen' ? 'Google Imagen 3' : 'Pollinations'}
+                         Cost for this generation
                       </p>
                   </div>
                 <Button type="submit" disabled={isGenerateDisabled} size="lg">
                   {isLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
-                      <Sparkles className="mr-2 h-4 w-4" />
+                      <Wand2 className="mr-2 h-4 w-4" />
                   )}
-                  {isLoading ? 'Generating...' : `Generate ${IMAGES_PER_GENERATION} Images`}
+                  {isLoading ? 'Generating...' : `Generate`}
                 </Button>
               </CardFooter>
             </form>
@@ -443,49 +250,55 @@ export default function ImageGenerator() {
 
       {/* Results Column */}
       <div className="lg:col-span-8 xl:col-span-9">
-        <Card className="min-h-[calc(100vh-10rem)] flex items-center justify-center border-dashed bg-secondary/50 p-4">
+        <Card className="min-h-[calc(100vh-10rem)] flex items-center justify-center border-dashed bg-secondary/50 p-4 aspect-video">
           <div className="text-center w-full">
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center text-muted-foreground">
                     <Loader2 className="h-16 w-16 mb-4 animate-spin" />
-                    <p className="font-semibold">Generating your images...</p>
-                    <p className="text-sm">This may take a few moments.</p>
+                    <p className="font-semibold">Generating your media...</p>
+                    <p className="text-sm">This may take a few moments, especially for videos.</p>
                 </div>
-            ) : generatedImages.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                {generatedImages.map((src, index) => {
-                  const isDownloadingThis = downloading === src;
-                  const filename = `imagen-go-brainai-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}-${index + 1}.png`;
-                  return (
-                    <div 
-                      key={index}
-                      onClick={() => !isDownloadingThis && handleDownload(src, filename)}
-                      className={cn(
-                        "block rounded-lg overflow-hidden group relative shadow-md",
-                        isDownloadingThis ? 'cursor-wait' : 'cursor-pointer',
-                        aspectRatioClass
-                      )}
-                      title="Click to download"
-                    >
-                      <Image 
-                        src={src} 
-                        alt={`Generated image ${index + 1}`} 
+            ) : generatedMedia ? (
+              <div className="w-full h-full aspect-video relative group">
+                {generatedMedia.type === 'image' && (
+                    <Image 
+                        src={generatedMedia.url} 
+                        alt={form.getValues('prompt')} 
                         fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1280px) 33vw, 20vw"
-                        className="object-cover group-hover:opacity-80 transition-opacity" 
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="object-contain" 
                         data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')}
-                        unoptimized={modelValue === 'pollinations'}
                       />
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        {isDownloadingThis ? (
-                          <Loader2 className="h-12 w-12 text-white animate-spin" />
-                        ) : (
-                          <Download className="h-12 w-12 text-white" />
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+                )}
+                {generatedMedia.type === 'video' && (
+                    <video
+                        src={generatedMedia.url}
+                        controls
+                        className="w-full h-full object-contain"
+                        autoPlay
+                        loop
+                        muted
+                    />
+                )}
+                <div 
+                  className={cn(
+                    "absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
+                    downloading ? 'cursor-wait' : 'cursor-pointer'
+                  )}
+                  onClick={() => {
+                      if (generatedMedia?.url) {
+                        const extension = generatedMedia.type === 'image' ? 'png' : 'mp4';
+                        const filename = `imagen-go-brainai-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}.${extension}`;
+                        handleDownload(generatedMedia.url, filename);
+                      }
+                  }}
+                >
+                  {downloading ? (
+                    <Loader2 className="h-12 w-12 text-white animate-spin" />
+                  ) : (
+                    <Download className="h-12 w-12 text-white" />
+                  )}
+                </div>
               </div>
             ) : (
                <div className="flex flex-col items-center justify-center text-muted-foreground p-8">
@@ -493,7 +306,7 @@ export default function ImageGenerator() {
                    <>
                       <ImageIcon className="h-16 w-16 mb-4" />
                       <p className="font-semibold text-lg">Login to start creating.</p>
-                      <p className="text-sm max-w-xs">Please log in to generate images.</p>
+                      <p className="text-sm max-w-xs">Please log in to generate images and videos.</p>
                       <Button onClick={openPlanModal} className="mt-4">Login</Button>
                    </>
                 ) : isLoginLocked ? (
@@ -508,15 +321,15 @@ export default function ImageGenerator() {
                     <AlertTriangle className="h-16 w-16 mb-4 text-destructive" />
                     <p className="font-semibold text-lg">You don't have enough credits.</p>
                     <p className="text-sm max-w-xs">
-                        Your current balance for the selected model is not enough for this generation. Please upgrade or buy a booster pack.
+                        Your current balance is not enough for this generation. Please upgrade or buy a booster pack.
                     </p>
                     <Button onClick={() => { const pricing = document.getElementById('pricing'); pricing?.scrollIntoView({behavior: 'smooth'}); }} className="mt-4">Upgrade Plan</Button>
                   </>
                 ) : (
                   <>
-                      <ImageIcon className="h-16 w-16 mb-4" />
-                      <p className="font-semibold text-lg">Your generated images will appear here.</p>
-                      <p className="text-sm max-w-xs">Enter a prompt and adjust your settings to begin.</p>
+                      <Sparkles className="h-16 w-16 mb-4" />
+                      <p className="font-semibold text-lg">Your generated images and videos will appear here.</p>
+                      <p className="text-sm max-w-xs">Enter a prompt and choose a model to begin.</p>
                   </>
                 )}
               </div>
@@ -527,5 +340,3 @@ export default function ImageGenerator() {
     </div>
   );
 }
-
-    
