@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Zap, Layers, Palette } from 'lucide-react';
+import { Zap, Film, Image as ImageIcon } from 'lucide-react';
 import ImageGenerator from '@/components/image-generator';
 import Link from 'next/link';
 
@@ -10,7 +10,7 @@ function HeroSection() {
             <div className="container mx-auto px-4">
                 <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Imagen Go BrainAi</h1>
                 <p className="max-w-3xl mx-auto text-muted-foreground mt-4 text-base md:text-lg">
-                    Welcome to the future of digital artistry. Imagen Go BrainAi is a state-of-the-art platform that transforms your text prompts into breathtaking, high-quality images in seconds.
+                    Welcome to the future of digital artistry. Imagen Go BrainAi is a state-of-the-art platform that transforms your text prompts into breathtaking, high-quality images and videos in seconds.
                 </p>
                 <p className="max-w-3xl mx-auto text-muted-foreground mt-4 text-base md:text-lg">
                     Our advanced AI understands a vast range of styles, moods, and compositions, giving you unparalleled control to bring your imagination to life. Whether you're a professional designer, a creative hobbyist, or just curious, our tools are designed for you.
@@ -27,17 +27,17 @@ const whyChooseFeatures = [
   {
     icon: Zap,
     title: 'Instant Creativity',
-    description: 'Go from a simple idea to five stunning visual concepts in seconds. Our high-speed generation process means less waiting and more creating.',
+    description: 'Go from a simple idea to a stunning visual concept in seconds. Our high-speed generation process means less waiting and more creating.',
   },
   {
-    icon: Layers,
-    title: 'Multi-Image Generation',
-    description: 'Why settle for one? Get five unique interpretations of your prompt simultaneously. Compare, combine, or simply choose the best fit for your needs.',
+    icon: Film,
+    title: 'Image & Video',
+    description: 'Unleash your creativity in both static and motion formats. Generate high-resolution images or captivating short video clips from a single prompt.',
   },
   {
-    icon: Palette,
-    title: 'Deep Customization',
-    description: 'Become the art director. Fine-tune every aspect of your creation, from the overall artistic style and mood to the specific lighting and color palette.',
+    icon: ImageIcon,
+    title: 'Vast Model Selection',
+    description: 'Choose from a wide array of specialized image and video models. Find the perfect style for any creative project, from photorealism to animation.',
   },
 ];
 
@@ -48,7 +48,7 @@ function WhyChooseSection() {
                 <div className="text-center max-w-3xl mx-auto">
                     <h2 className="text-3xl md:text-4xl font-bold">Why Choose Imagen Go BrainAi?</h2>
                     <p className="mt-4 text-muted-foreground text-lg">
-                        Our platform is built to empower your creativity with speed, variety, and precision. We provide the tools you need to not just generate images, but to craft visual stories.
+                        Our platform is built to empower your creativity with speed, variety, and precision. We provide the tools you need to not just generate content, but to craft visual stories.
                     </p>
                 </div>
                 <div className="mt-12 grid md:grid-cols-3 gap-8">

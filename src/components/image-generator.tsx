@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -29,8 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ImageIcon, Sparkles, Wand2, Loader2, Download, Cpu, Ratio } from 'lucide-react';
+import { ImageIcon, Sparkles, Wand2, Loader2, Download, Video, Clapperboard } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { generateMedia, MediaGenerationOutput } from "@/ai/flows/image-generation-flow";
@@ -38,47 +39,61 @@ import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
-  aspectRatio: z.string().optional(),
+  model: z.string().min(1, 'Please select a model.'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
+type GenerationType = 'image' | 'video';
 
-const aspectRatios = [
-    { name: 'Square (1:1)', width: 1024, height: 1024, value: '1024x1024' },
-    { name: 'Portrait (2:3)', width: 1024, height: 1536, value: '1024x1536' },
-    { name: 'Landscape (3:2)', width: 1536, height: 1024, value: '1536x1024' },
-];
+const imageModels = [
+    { name: 'Stable Diffusion XL', id: 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de79ed883204318ea3862e816de84e2' },
+    { name: 'Realistic Vision v6.0', id: 'sg161222/realistic-vision-v6.0-b1:5c54964a586c4764491a117376c3395669a85016834033e46c8205423f892857' },
+    { name: 'DreamShaper v8', id: 'lykon/dreamshaper-8:92209930b2c171e544605f4245701419a43fb6334635173f458e65e495a6397b' },
+    { name: 'OpenJourney', id: 'prompthero/openjourney:9936c2001faa2194a261c01381f90e65261879985476014a0a37a334592a01eb' },
+    { name: 'Deliberate', id: 'prompthero/deliberate-v2:f2230a133e36e61f23851515f4587635c9a491b8a5b9b87747b0a7114667d4f9' },
+]
+
+const videoModels = [
+    { name: 'Zeroscope v2 XL', id: 'anotherjesse/zeroscope-v2-xl:9f747673945c62801b13b84701c783929c0ee784e4748103455d22b6c4215f93' },
+    { name: 'AnimateDiff', id: 'lucataco/animate-diff:beecf59c4aee8d81bf34deacbedae75d9863e44928b341076f6d83393c049845' },
+    { name: 'Stable Video Diffusion', id: 'stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172638'},
+    { name: 'Deforum', id: 'deforum/deforum_api:03defb35a89e34c3c3165b43729d7d0a2def3c329b3a58e6047ac657738a1663' },
+    { name: 'I2VGen-XL', id: 'ali-vilab/i2vgen-xl:5821a338d0246a6d89f8c16454d48a2fd3ddf4350003b578c2e648174780562e' },
+]
 
 export default function ImageGenerator() {
   const [generatedMedia, setGeneratedMedia] = useState<MediaGenerationOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [generationType, setGenerationType] = useState<GenerationType>('image');
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       prompt: 'A majestic lion wearing a crown, sitting on a throne in a cosmic library.',
-      aspectRatio: aspectRatios[0].value,
+      model: imageModels[0].id,
     },
   });
+
+  useEffect(() => {
+    form.setValue('model', generationType === 'image' ? imageModels[0].id : videoModels[0].id)
+  }, [generationType, form]);
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     setGeneratedMedia(null);
 
-    const selectedRatio = aspectRatios.find(r => r.value === values.aspectRatio);
-
     try {
       const result = await generateMedia({
           prompt: values.prompt,
-          width: selectedRatio?.width,
-          height: selectedRatio?.height,
+          model: values.model,
+          type: generationType,
       });
       setGeneratedMedia(result);
       toast({
           title: "Success!",
-          description: "Your image has been generated.",
+          description: `Your ${generationType} has been generated.`,
       });
     } catch (error) {
       console.error("Media generation failed:", error);
@@ -96,6 +111,9 @@ export default function ImageGenerator() {
     if (downloading) return;
     setDownloading(url);
     try {
+      // Using a proxy is often required to bypass CORS issues for cross-origin fetches.
+      // For simplicity here, we'll try a direct fetch which may work in some environments
+      // but in a real-world scenario, a server-side proxy endpoint for downloads is more robust.
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -122,6 +140,7 @@ export default function ImageGenerator() {
   };
   
   const isGenerateDisabled = isLoading;
+  const currentModels = generationType === 'image' ? imageModels : videoModels;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -135,6 +154,13 @@ export default function ImageGenerator() {
                 <CardDescription>Describe your vision.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                 <Tabs value={generationType} onValueChange={(value) => setGenerationType(value as GenerationType)} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="image"><ImageIcon className="mr-2" /> Image</TabsTrigger>
+                    <TabsTrigger value="video"><Video className="mr-2" /> Video</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                
                 <FormField
                   control={form.control}
                   name="prompt"
@@ -153,17 +179,18 @@ export default function ImageGenerator() {
                   )}
                 />
 
-                <FormField control={form.control} name="aspectRatio" render={({ field }) => (
+                <FormField control={form.control} name="model" render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="font-semibold flex items-center gap-2"><Ratio className="h-5 w-5 text-primary" /> Aspect Ratio</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormLabel className="font-semibold flex items-center gap-2"><Clapperboard className="h-5 w-5 text-primary" /> Model</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
-                                {aspectRatios.map(ratio => (
-                                    <SelectItem key={ratio.value} value={ratio.value}>{ratio.name}</SelectItem>
+                                {currentModels.map(model => (
+                                    <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
+                        <FormMessage />
                     </FormItem>
                 )} />
 
@@ -222,7 +249,7 @@ export default function ImageGenerator() {
                   )}
                   onClick={() => {
                       if (generatedMedia?.url) {
-                        const extension = 'png';
+                        const extension = generatedMedia.type === 'image' ? 'png' : 'mp4';
                         const filename = `imagen-go-brainai-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}.${extension}`;
                         handleDownload(generatedMedia.url, filename);
                       }
@@ -238,7 +265,7 @@ export default function ImageGenerator() {
             ) : (
                <div className="flex flex-col items-center justify-center text-muted-foreground p-8">
                   <Sparkles className="h-16 w-16 mb-4" />
-                  <p className="font-semibold text-lg">Your generated images will appear here.</p>
+                  <p className="font-semibold text-lg">Your creations will appear here.</p>
                   <p className="text-sm max-w-xs">Enter a prompt and choose a model to begin.</p>
               </div>
             )}
