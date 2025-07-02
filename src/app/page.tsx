@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Zap, Film, Image as ImageIcon } from 'lucide-react';
 import ImageGenerator from '@/components/image-generator';
 import Link from 'next/link';
+import FaqSection from '@/components/sections/faq';
 
 function HeroSection() {
     return (
@@ -83,6 +84,7 @@ export default function Home() {
         <ImageGenerator />
       </div>
       <WhyChooseSection />
+      <FaqSection />
     </>
   );
 }
