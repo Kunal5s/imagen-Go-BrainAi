@@ -12,6 +12,7 @@ const socialLinks = [
 const companyLinks = [
     { href: '/about', label: 'About Us' },
     { href: '/contact', label: 'Contact Us' },
+    { href: '/pricing', label: 'Pricing' },
 ];
 
 const legalLinks = [

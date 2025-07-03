@@ -13,23 +13,27 @@ const faqs = [
   },
   {
     question: "What can I create with it?",
-    answer: "You can create anything you can imagine! From realistic portraits and landscapes to fantasy art, and even short video clips. Our platform gives you access to a wide variety of specialized AI models."
+    answer: "You can create anything you can imagine! From realistic portraits and landscapes to fantasy art, product mockups, and abstract designs. Our AI understands a wide variety of styles and concepts."
   },
   {
-    question: "Is this service free to use?",
-    answer: "Yes, currently all image and video generation on Imagen Max BrainAi is completely free to use. You can start creating right away without any subscription or credits."
+    question: "Is there a free plan?",
+    answer: "Yes, our Free plan is perfect for trying out the platform. It includes 10 generation credits per month. For more advanced use and more credits, you can upgrade to our Pro or Mega plans."
   },
   {
-    question: "What models can I use?",
-    answer: "We provide access to a curated list of powerful, open-source image and video models via the Replicate API, including Stable Diffusion XL, Zeroscope, AnimateDiff, and more."
+    question: "What payment methods do you accept?",
+    answer: "We accept all major credit cards, including Visa, Mastercard, and American Express. All payments are processed securely."
   },
   {
     question: "Can I use the generated media for commercial purposes?",
-    answer: "Generally, yes. However, each AI model has its own license and terms of use. We recommend checking the license for the specific model you are using on its official page before using generated content for commercial projects."
+    answer: "Yes! Images and videos created under our Pro and Mega plans come with a commercial use license. The Free plan is for personal use only."
+  },
+    {
+    question: "How does the credit system work?",
+    answer: "Credits are used to generate images and videos. Each model has a different credit cost per generation. Our paid plans provide you with a monthly allowance of credits, and you can purchase more if needed."
   },
   {
-    question: "Do you store my generated images and videos?",
-    answer: "The application does not currently store your generated media in a personal gallery. You should download any images or videos you wish to keep immediately after they are generated."
+    question: "Do you store my generated images?",
+    answer: "The application does not currently store your generated images in a personal gallery. You should download any images you wish to keep immediately after they are generated."
   }
 ]
 
