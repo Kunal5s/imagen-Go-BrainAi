@@ -64,11 +64,10 @@ type FormValues = z.infer<typeof formSchema>;
 type GenerationType = 'image' | 'video';
 
 const imageModels = [
-    { name: 'Stable Diffusion XL Turbo (Fast)', id: 'stability-ai/sdxl-turbo:3554d9e896e1127e5ac0896dc82fda889b50ae9665aa042f64481023086b9736' },
-    { name: 'Latent Consistency Model (Fast)', id: 'fofr/latent-consistency-model:68a849134d6116f1950d8a43697925e0e1500358893d56d05c2f00a5a4099209' },
-    { name: 'Pollinations Majesty Diffusion', id: 'pollinations/majesty-diffusion:267a395c172413b5e43c5b864380b261b0c95092a7e44a47a13c385a8523c9ff'},
-    { name: 'Stable Diffusion XL', id: 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de79ed883204318ea3862e816de84e2' },
-    { name: 'Playground v2.5', id: 'playgroundai/playground-v2.5:5957069d0206b1e13e4a0712d3f947910166297b4b1a72e12152d1c6b127d636' },
+    { name: 'SDXL Turbo (Fast)', id: 'stability-ai/sdxl-turbo:a4355a4c22a72ea2d67a2166a882146b99d53c23946c1e053c07e0344d5d959e' },
+    { name: 'Playground v2.5 (Artistic)', id: 'playgroundai/playground-v2.5:5957069d0206b1e13e4a0712d3f947910166297b4b1a72e12152d1c6b127d636' },
+    { name: 'Pollinations Pix-Style', id: 'pollinations/pixar-style-character:a7f5ce36603434720e03e54b676451e604f2a2491b117861362d7b539461c3bf'},
+    { name: 'Stable Diffusion XL (High Quality)', id: 'stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96e3f26ce212045d8' },
     { name: 'Realistic Vision v6.0', id: 'sg161222/realistic-vision-v6.0-b1:5c54964a586c4764491a117376c3395669a85016834033e46c8205423f892857' },
     { name: 'DreamShaper v8', id: 'lykon/dreamshaper-8:92209930b2c171e544605f4245701419a43fb6334635173f458e65e495a6397b' },
     { name: 'OpenJourney', id: 'prompthero/openjourney:9936c2001faa2194a261c01381f90e65261879985476014a0a37a334592a01eb' },
@@ -109,9 +108,11 @@ export default function ImageGenerator() {
     setGeneratedMedia(null);
 
     let detailedPrompt = values.prompt;
-    const creativeParts = [values.style, values.mood, values.lighting, values.color].filter(Boolean);
-    if (creativeParts.length > 0) {
-      detailedPrompt += `, ${creativeParts.join(', ')}`;
+    if (generationType === 'image') {
+      const creativeParts = [values.style, values.mood, values.lighting, values.color].filter(Boolean);
+      if (creativeParts.length > 0) {
+        detailedPrompt += `, ${creativeParts.join(', ')}`;
+      }
     }
     
     const selectedRatio = ratios.find(r => r.name === values.ratio);
@@ -124,6 +125,7 @@ export default function ImageGenerator() {
           width: generationType === 'image' ? selectedRatio?.width : undefined,
           height: generationType === 'image' ? selectedRatio?.height : undefined,
       });
+      
       setGeneratedMedia(result);
       toast({
           title: "Success!",
@@ -219,7 +221,7 @@ export default function ImageGenerator() {
                       <FormLabel className="font-semibold flex items-center gap-2">
                         <Wand2 className="h-5 w-5 text-primary" /> Model
                       </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -245,7 +247,7 @@ export default function ImageGenerator() {
                       <FormField control={form.control} name="style" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="flex items-center gap-2"><Camera className="h-4 w-4" />Style</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} disabled={generationType === 'video'}>
                               <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                               <SelectContent>{styles.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                             </Select>
@@ -254,7 +256,7 @@ export default function ImageGenerator() {
                         <FormField control={form.control} name="mood" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="flex items-center gap-2"><Smile className="h-4 w-4" />Mood</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} disabled={generationType === 'video'}>
                               <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                               <SelectContent>{moods.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                             </Select>
@@ -263,7 +265,7 @@ export default function ImageGenerator() {
                         <FormField control={form.control} name="lighting" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="flex items-center gap-2"><Sun className="h-4 w-4" />Lighting</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} disabled={generationType === 'video'}>
                               <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                               <SelectContent>{lightings.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
                             </Select>
@@ -272,7 +274,7 @@ export default function ImageGenerator() {
                         <FormField control={form.control} name="color" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="flex items-center gap-2"><Palette className="h-4 w-4" />Color</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} disabled={generationType === 'video'}>
                               <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                               <SelectContent>{colors.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                             </Select>
