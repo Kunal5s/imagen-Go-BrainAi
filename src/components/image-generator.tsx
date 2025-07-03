@@ -31,15 +31,33 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ImageIcon, Sparkles, Wand2, Loader2, Download, Video } from 'lucide-react';
+import { ImageIcon, Sparkles, Wand2, Loader2, Download, Video, Palette, Sun, Smile, Camera } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { generateMedia, MediaGenerationOutput } from "@/ai/flows/image-generation-flow";
 import { cn } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+
+const styles = ["Photorealistic", "Anime", "Cartoon", "3D Render", "Pixel Art", "Impressionistic", "Surreal"];
+const moods = ["Happy", "Sad", "Calm", "Energetic", "Mysterious", "Romantic"];
+const lightings = ["Daylight", "Studio", "Neon", "Sunset", "Backlight", "Dramatic"];
+const colors = ["Vibrant", "Monochromatic", "Pastel", "Muted", "Black and White"];
+const ratios = [
+    { name: '1:1 (Square)', width: 1024, height: 1024 },
+    { name: '16:9 (Widescreen)', width: 1024, height: 576 },
+    { name: '9:16 (Portrait)', width: 576, height: 1024 },
+    { name: '4:3 (Standard)', width: 1024, height: 768 },
+    { name: '3:2 (Landscape)', width: 1024, height: 683 },
+];
 
 const formSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
   model: z.string().min(1, 'Please select a model.'),
+  style: z.string().optional(),
+  mood: z.string().optional(),
+  lighting: z.string().optional(),
+  color: z.string().optional(),
+  ratio: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -47,10 +65,11 @@ type GenerationType = 'image' | 'video';
 
 const imageModels = [
     { name: 'Stable Diffusion XL', id: 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de79ed883204318ea3862e816de84e2' },
+    { name: 'Pollinations Majesty Diffusion', id: 'pollinations/majesty-diffusion-v4:17a73e346f917516104259463c33b2591b65d8364803960305b0b301b44ee2b5' },
     { name: 'Realistic Vision v6.0', id: 'sg161222/realistic-vision-v6.0-b1:5c54964a586c4764491a117376c3395669a85016834033e46c8205423f892857' },
+    { name: 'Pollinations Lemon Diffusion', id: 'pollinations/lemon-diffusion:1a63c6753a2283a04297374b3446d3202e8d2e825a2786b5e054454795e1e550'},
     { name: 'DreamShaper v8', id: 'lykon/dreamshaper-8:92209930b2c171e544605f4245701419a43fb6334635173f458e65e495a6397b' },
     { name: 'OpenJourney', id: 'prompthero/openjourney:9936c2001faa2194a261c01381f90e65261879985476014a0a37a334592a01eb' },
-    { name: 'Deliberate', id: 'prompthero/deliberate-v2:f2230a133e36e61f23851515f4587635c9a491b8a5b9b87747b0a7114667d4f9' },
 ]
 
 const videoModels = [
@@ -71,6 +90,11 @@ export default function ImageGenerator() {
     defaultValues: {
       prompt: 'A majestic lion wearing a crown, sitting on a throne in a cosmic library.',
       model: imageModels[0].id,
+      style: styles[0],
+      mood: moods[0],
+      lighting: lightings[0],
+      color: colors[0],
+      ratio: ratios[0].name,
     },
   });
 
@@ -82,11 +106,21 @@ export default function ImageGenerator() {
     setIsLoading(true);
     setGeneratedMedia(null);
 
+    let detailedPrompt = values.prompt;
+    const creativeParts = [values.style, values.mood, values.lighting, values.color].filter(Boolean);
+    if (creativeParts.length > 0) {
+      detailedPrompt += `, ${creativeParts.join(', ')}`;
+    }
+    
+    const selectedRatio = ratios.find(r => r.name === values.ratio);
+
     try {
       const result = await generateMedia({
-          prompt: values.prompt,
+          prompt: detailedPrompt,
           model: values.model,
           type: generationType,
+          width: selectedRatio?.width,
+          height: selectedRatio?.height,
       });
       setGeneratedMedia(result);
       toast({
@@ -201,6 +235,60 @@ export default function ImageGenerator() {
                     </FormItem>
                   )}
                 />
+
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="creative-tools">
+                    <AccordionTrigger className="font-semibold">Creative Tools</AccordionTrigger>
+                    <AccordionContent className="space-y-4 pt-4">
+                      <FormField control={form.control} name="style" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2"><Camera className="h-4 w-4" />Style</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                              <SelectContent>{styles.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="mood" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2"><Smile className="h-4 w-4" />Mood</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                              <SelectContent>{moods.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="lighting" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2"><Sun className="h-4 w-4" />Lighting</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                              <SelectContent>{lightings.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="color" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2"><Palette className="h-4 w-4" />Color</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                              <SelectContent>{colors.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="ratio" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2"><ImageIcon className="h-4 w-4" />Ratio</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value} disabled={generationType === 'video'}>
+                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                              <SelectContent>{ratios.map(r => <SelectItem key={r.name} value={r.name}>{r.name}</SelectItem>)}</SelectContent>
+                            </Select>
+                             {generationType === 'video' && <FormDescription className="text-xs">Ratio controls are disabled for video generation.</FormDescription>}
+                          </FormItem>
+                        )} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </CardContent>
               <CardFooter className="flex gap-2 pt-6">
                 <Button type="submit" disabled={isGenerateDisabled} size="lg" className="flex-grow">
@@ -213,7 +301,7 @@ export default function ImageGenerator() {
                 </Button>
                 <Button type="button" variant="outline" size="lg" disabled={isLoading}>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Suggest Prompts
+                    Suggest
                 </Button>
               </CardFooter>
             </form>

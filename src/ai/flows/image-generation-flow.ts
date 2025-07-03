@@ -14,6 +14,8 @@ const MediaGenerationInputSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
   model: z.string().min(1, 'Model is required.'),
   type: z.enum(['image', 'video']),
+  width: z.number().optional(),
+  height: z.number().optional(),
 });
 export type MediaGenerationInput = z.infer<typeof MediaGenerationInputSchema>;
 
@@ -24,15 +26,24 @@ const MediaGenerationOutputSchema = z.object({
 export type MediaGenerationOutput = z.infer<typeof MediaGenerationOutputSchema>;
 
 const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_KEY,
+  auth: process.env.REPLICATE_API_TOKEN,
 });
 
 export async function generateMedia(input: MediaGenerationInput): Promise<MediaGenerationOutput> {
     try {
+        const replicateInput: { prompt: string; width?: number; height?: number } = {
+          prompt: input.prompt,
+        };
+
+        if (input.width && input.type === 'image') {
+          replicateInput.width = input.width;
+        }
+        if (input.height && input.type === 'image') {
+          replicateInput.height = input.height;
+        }
+        
         const output = await replicate.run(input.model as `${string}/${string}:${string}`, {
-          input: {
-            prompt: input.prompt,
-          }
+          input: replicateInput
         });
         
         if (!output || !Array.isArray(output) || output.length === 0) {
