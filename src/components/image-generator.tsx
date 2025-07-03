@@ -212,23 +212,23 @@ export default function ImageGenerator() {
 
       {/* Results Column */}
       <div className="lg:col-span-8 xl:col-span-9">
-        <Card className="min-h-[calc(100vh-10rem)] flex items-center justify-center border-dashed bg-secondary/50 p-4 aspect-video">
-          <div className="text-center w-full">
+        <Card className="w-full aspect-square md:aspect-video flex items-center justify-center border-dashed bg-secondary/50 p-4">
+          <div className="text-center w-full h-full">
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                <div className="flex flex-col items-center justify-center text-muted-foreground h-full">
                     <Loader2 className="h-16 w-16 mb-4 animate-spin" />
                     <p className="font-semibold">Generating your media...</p>
                     <p className="text-sm">This may take a few moments.</p>
                 </div>
             ) : generatedMedia ? (
-              <div className="w-full h-full aspect-video relative group">
+              <div className="w-full h-full relative group">
                 {generatedMedia.type === 'image' && (
                     <Image 
                         src={generatedMedia.url} 
                         alt={form.getValues('prompt')} 
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                        className="object-contain" 
+                        className="object-contain rounded-lg" 
                         data-ai-hint={form.getValues('prompt').split(' ').slice(0, 2).join(' ')}
                       />
                 )}
@@ -236,7 +236,7 @@ export default function ImageGenerator() {
                     <video
                         src={generatedMedia.url}
                         controls
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain rounded-lg"
                         autoPlay
                         loop
                         muted
@@ -263,7 +263,7 @@ export default function ImageGenerator() {
                 </div>
               </div>
             ) : (
-               <div className="flex flex-col items-center justify-center text-muted-foreground p-8">
+               <div className="flex flex-col h-full items-center justify-center text-muted-foreground p-8">
                   <Sparkles className="h-16 w-16 mb-4" />
                   <p className="font-semibold text-lg">Your creations will appear here.</p>
                   <p className="text-sm max-w-xs">Enter a prompt and choose a model to begin.</p>
