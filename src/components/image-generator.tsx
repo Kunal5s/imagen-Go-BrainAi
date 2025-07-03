@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { ImageIcon, Sparkles, Wand2, Loader2, Download, Video, Palette, Sun, Smile, Camera } from 'lucide-react';
+import { ImageIcon, Wand2, Loader2, Download, Video, Palette, Sun, Smile, Camera } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { generateMedia, MediaGenerationOutput } from "@/ai/flows/image-generation-flow";
@@ -64,10 +64,12 @@ type FormValues = z.infer<typeof formSchema>;
 type GenerationType = 'image' | 'video';
 
 const imageModels = [
+    { name: 'Stable Diffusion XL Turbo (Fast)', id: 'stability-ai/sdxl-turbo:3554d9e896e1127e5ac0896dc82fda889b50ae9665aa042f64481023086b9736' },
+    { name: 'Latent Consistency Model (Fast)', id: 'fofr/latent-consistency-model:68a849134d6116f1950d8a43697925e0e1500358893d56d05c2f00a5a4099209' },
+    { name: 'Pollinations Majesty Diffusion', id: 'pollinations/majesty-diffusion:267a395c172413b5e43c5b864380b261b0c95092a7e44a47a13c385a8523c9ff'},
     { name: 'Stable Diffusion XL', id: 'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de79ed883204318ea3862e816de84e2' },
-    { name: 'Pollinations Majesty Diffusion', id: 'pollinations/majesty-diffusion-v4:17a73e346f917516104259463c33b2591b65d8364803960305b0b301b44ee2b5' },
+    { name: 'Playground v2.5', id: 'playgroundai/playground-v2.5:5957069d0206b1e13e4a0712d3f947910166297b4b1a72e12152d1c6b127d636' },
     { name: 'Realistic Vision v6.0', id: 'sg161222/realistic-vision-v6.0-b1:5c54964a586c4764491a117376c3395669a85016834033e46c8205423f892857' },
-    { name: 'Pollinations Lemon Diffusion', id: 'pollinations/lemon-diffusion:1a63c6753a2283a04297374b3446d3202e8d2e825a2786b5e054454795e1e550'},
     { name: 'DreamShaper v8', id: 'lykon/dreamshaper-8:92209930b2c171e544605f4245701419a43fb6334635173f458e65e495a6397b' },
     { name: 'OpenJourney', id: 'prompthero/openjourney:9936c2001faa2194a261c01381f90e65261879985476014a0a37a334592a01eb' },
 ]
@@ -119,8 +121,8 @@ export default function ImageGenerator() {
           prompt: detailedPrompt,
           model: values.model,
           type: generationType,
-          width: selectedRatio?.width,
-          height: selectedRatio?.height,
+          width: generationType === 'image' ? selectedRatio?.width : undefined,
+          height: generationType === 'image' ? selectedRatio?.height : undefined,
       });
       setGeneratedMedia(result);
       toast({
@@ -167,7 +169,7 @@ export default function ImageGenerator() {
       setDownloading(null);
     }
   };
-  
+
   const isGenerateDisabled = isLoading;
   const currentModels = generationType === 'image' ? imageModels : videoModels;
 
@@ -236,7 +238,7 @@ export default function ImageGenerator() {
                   )}
                 />
 
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion type="single" collapsible className="w-full" defaultValue="creative-tools">
                   <AccordionItem value="creative-tools">
                     <AccordionTrigger className="font-semibold">Creative Tools</AccordionTrigger>
                     <AccordionContent className="space-y-4 pt-4">
@@ -291,17 +293,13 @@ export default function ImageGenerator() {
                 </Accordion>
               </CardContent>
               <CardFooter className="flex gap-2 pt-6">
-                <Button type="submit" disabled={isGenerateDisabled} size="lg" className="flex-grow">
+                <Button type="submit" disabled={isGenerateDisabled} size="lg" className="w-full">
                   {isLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                       <Wand2 className="mr-2 h-4 w-4" />
                   )}
                   {isLoading ? 'Generating...' : `Generate`}
-                </Button>
-                <Button type="button" variant="outline" size="lg" disabled={isLoading}>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Suggest
                 </Button>
               </CardFooter>
             </form>

@@ -1,5 +1,5 @@
 {
-  "name": "imagen-go-brainai",
+  "name": "imagen-max-brainai",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -32,6 +32,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
+    "framer-motion": "^11.3.19",
     "lucide-react": "^0.414.0",
     "next": "^14.2.5",
     "react": "^18.3.1",
