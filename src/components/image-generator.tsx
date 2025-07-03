@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -31,9 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { ImageIcon, Sparkles, Wand2, Loader2, Download, Video, Palette, AspectRatio, Smile, Sun, Gem } from 'lucide-react';
+import { ImageIcon, Sparkles, Wand2, Loader2, Download, Video } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { generateMedia, MediaGenerationOutput } from "@/ai/flows/image-generation-flow";
@@ -42,12 +40,6 @@ import { cn } from '@/lib/utils';
 const formSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
   model: z.string().min(1, 'Please select a model.'),
-  artisticStyle: z.string().optional(),
-  aspectRatio: z.string().optional(),
-  mood: z.string().optional(),
-  lighting: z.string().optional(),
-  colorPalette: z.string().optional(),
-  quality: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -67,15 +59,6 @@ const videoModels = [
     { name: 'Stable Video Diffusion', id: 'stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172638'},
 ]
 
-const creativeOptions = {
-    artisticStyle: ['Photographic', 'Cinematic', 'Anime', 'Fantasy Art', '3D Render', 'Pixel Art'],
-    aspectRatio: ['Square (1:1)', 'Portrait (2:3)', 'Widescreen (16:9)'],
-    mood: ['Default', 'Mysterious', 'Happy', 'Dramatic', 'Peaceful', 'Energetic'],
-    lighting: ['Default', 'Cinematic', 'Natural', 'Studio', 'Dramatic', 'Soft'],
-    colorPalette: ['Default', 'Vibrant', 'Monochrome', 'Pastel', 'Warm Tones', 'Cool Tones'],
-    quality: ['Standard (1080p)', 'HD (2K)', 'Ultra HD (4K)'],
-}
-
 export default function ImageGenerator() {
   const [generatedMedia, setGeneratedMedia] = useState<MediaGenerationOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,12 +71,6 @@ export default function ImageGenerator() {
     defaultValues: {
       prompt: 'A majestic lion wearing a crown, sitting on a throne in a cosmic library.',
       model: imageModels[0].id,
-      artisticStyle: 'Photographic',
-      aspectRatio: 'Square (1:1)',
-      mood: 'Mysterious',
-      lighting: 'Default',
-      colorPalette: 'Default',
-      quality: 'Standard (1080p)',
     },
   });
 
@@ -110,12 +87,6 @@ export default function ImageGenerator() {
           prompt: values.prompt,
           model: values.model,
           type: generationType,
-          artisticStyle: values.artisticStyle,
-          aspectRatio: values.aspectRatio,
-          mood: values.mood,
-          lighting: values.lighting,
-          colorPalette: values.colorPalette,
-          quality: values.quality,
       });
       setGeneratedMedia(result);
       toast({
@@ -204,89 +175,32 @@ export default function ImageGenerator() {
                   )}
                 />
 
-                <FormField control={form.control} name="model" render={({ field }) => (
+                <FormField
+                  control={form.control}
+                  name="model"
+                  render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="font-semibold flex items-center gap-2"><Wand2 className="h-5 w-5 text-primary" /> Model</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
-                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent>
-                                {currentModels.map(model => (
-                                    <SelectItem key={model.id} value={model.id}>{model.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
+                      <FormLabel className="font-semibold flex items-center gap-2">
+                        <Wand2 className="h-5 w-5 text-primary" /> Model
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {currentModels.map((model) => (
+                            <SelectItem key={model.id} value={model.id}>
+                              {model.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
-                )} />
-
-                <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger>
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                        <span className="font-semibold">Creative Tools</span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      
-                      <FormField control={form.control} name="artisticStyle" render={({ field }) => (
-                          <FormItem>
-                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><Wand2 className="h-4 w-4" /> Artistic Style</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                  <SelectContent>{creativeOptions.artisticStyle.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                              </Select><FormMessage />
-                          </FormItem>
-                      )} />
-
-                      <FormField control={form.control} name="aspectRatio" render={({ field }) => (
-                          <FormItem>
-                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><AspectRatio className="h-4 w-4" /> Aspect Ratio</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                  <SelectContent>{creativeOptions.aspectRatio.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                              </Select><FormMessage />
-                          </FormItem>
-                      )} />
-
-                      <FormField control={form.control} name="mood" render={({ field }) => (
-                          <FormItem>
-                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><Smile className="h-4 w-4" /> Mood</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                  <SelectContent>{creativeOptions.mood.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                              </Select><FormMessage />
-                          </FormItem>
-                      )} />
-                      
-                      <FormField control={form.control} name="lighting" render={({ field }) => (
-                          <FormItem>
-                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><Sun className="h-4 w-4" /> Lighting</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                  <SelectContent>{creativeOptions.lighting.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                              </Select><FormMessage />
-                          </FormItem>
-                      )} />
-
-                      <FormField control={form.control} name="colorPalette" render={({ field }) => (
-                          <FormItem>
-                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><Palette className="h-4 w-4" /> Color Palette</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                  <SelectContent>{creativeOptions.colorPalette.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                              </Select><FormMessage />
-                          </FormItem>
-                      )} />
-
-                      <FormField control={form.control} name="quality" render={({ field }) => (
-                          <FormItem>
-                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><Gem className="h-4 w-4" /> Quality</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                                  <SelectContent>{creativeOptions.quality.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                              </Select><FormMessage />
-                          </FormItem>
-                      )} />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-
-
+                  )}
+                />
               </CardContent>
               <CardFooter className="flex gap-2 pt-6">
                 <Button type="submit" disabled={isGenerateDisabled} size="lg" className="flex-grow">
