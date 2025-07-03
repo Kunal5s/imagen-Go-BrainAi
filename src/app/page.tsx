@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Zap, Film, Image as ImageIcon } from 'lucide-react';
+import { Zap, LayoutGrid, SlidersHorizontal } from 'lucide-react';
 import ImageGenerator from '@/components/image-generator';
 import Link from 'next/link';
 import FaqSection from '@/components/sections/faq';
@@ -33,14 +33,14 @@ const whyChooseFeatures = [
     description: 'Go from a simple idea to a stunning visual concept in seconds. Our high-speed generation process means less waiting and more creating.',
   },
   {
-    icon: Film,
-    title: 'Image & Video',
-    description: 'Unleash your creativity in both static and motion formats. Generate high-resolution images or captivating short video clips from a single prompt.',
+    icon: LayoutGrid,
+    title: 'Quad-Image Generation',
+    description: 'Why settle for one? Get four unique interpretations of your prompt simultaneously. Compare, combine, or simply choose the best fit for your needs.',
   },
   {
-    icon: ImageIcon,
-    title: 'Vast Model Selection',
-    description: 'Choose from a wide array of specialized image and video models. Find the perfect style for any creative project, from photorealism to animation.',
+    icon: SlidersHorizontal,
+    title: 'Deep Customization',
+    description: 'Become the art director. Fine-tune every aspect of your creation, from the overall artistic style and mood to the specific lighting and color palette.',
   },
 ];
 
