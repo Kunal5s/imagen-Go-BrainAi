@@ -16,8 +16,8 @@ const faqs = [
     answer: "You can create anything you can imagine! From realistic portraits and landscapes to fantasy art, and even short video clips. Our platform gives you access to a wide variety of specialized AI models."
   },
   {
-    question: "Is there a free plan?",
-    answer: "Yes, our Free plan is perfect for trying out the platform. It includes a limited number of generation credits per month. For more advanced use, you can upgrade to our Pro or Mega plans."
+    question: "Is this service free to use?",
+    answer: "Yes, currently all image and video generation on Imagen Max BrainAi is completely free to use. You can start creating right away without any subscription or credits."
   },
   {
     question: "What models can I use?",
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     question: "Can I use the generated media for commercial purposes?",
-    answer: "Yes, images and videos created under our Pro and Mega plans come with a commercial use license. The Free plan is for personal use only."
+    answer: "Generally, yes. However, each AI model has its own license and terms of use. We recommend checking the license for the specific model you are using on its official page before using generated content for commercial projects."
   },
   {
     question: "Do you store my generated images and videos?",

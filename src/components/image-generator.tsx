@@ -17,6 +17,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,7 +33,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { ImageIcon, Sparkles, Wand2, Loader2, Download, Video, Clapperboard, Palette, AspectRatio, Smile, Sun, Gem } from 'lucide-react';
+import { ImageIcon, Sparkles, Wand2, Loader2, Download, Video, Palette, AspectRatio, Smile, Sun, Gem } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { generateMedia, MediaGenerationOutput } from "@/ai/flows/image-generation-flow";
@@ -205,7 +206,7 @@ export default function ImageGenerator() {
 
                 <FormField control={form.control} name="model" render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="font-semibold flex items-center gap-2"><Clapperboard className="h-5 w-5 text-primary" /> Model</FormLabel>
+                        <FormLabel className="font-semibold flex items-center gap-2"><Wand2 className="h-5 w-5 text-primary" /> Model</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
@@ -294,7 +295,7 @@ export default function ImageGenerator() {
                   ) : (
                       <Wand2 className="mr-2 h-4 w-4" />
                   )}
-                  {isLoading ? 'Generating...' : `Generate 4 Images`}
+                  {isLoading ? 'Generating...' : `Generate`}
                 </Button>
                 <Button type="button" variant="outline" size="lg" disabled={isLoading}>
                     <Sparkles className="mr-2 h-4 w-4" />

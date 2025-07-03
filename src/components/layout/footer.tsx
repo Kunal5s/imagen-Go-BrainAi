@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { BrainCircuit, Twitter, Facebook, Instagram, Linkedin } from 'lucide-react';
 
@@ -11,7 +12,6 @@ const socialLinks = [
 const companyLinks = [
     { href: '/about', label: 'About Us' },
     { href: '/contact', label: 'Contact Us' },
-    { href: '/pricing', label: 'Pricing' },
 ];
 
 const legalLinks = [
