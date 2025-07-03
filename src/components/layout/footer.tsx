@@ -28,7 +28,7 @@ export default function Footer() {
             <div className="flex flex-col gap-4">
                 <Link href="/" className="flex items-center gap-2 font-bold text-xl">
                   <BrainCircuit className="h-6 w-6" />
-                  <span>Imagen Go BrainAi</span>
+                  <span>Imagen Max BrainAi</span>
                 </Link>
                 <p className="text-muted-foreground text-sm">The future of AI-powered image generation.</p>
                 <div className="flex gap-4">
@@ -78,7 +78,7 @@ export default function Footer() {
             </div>
         </div>
         <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Imagen Go BrainAi. All rights reserved.
+            &copy; {new Date().getFullYear()} Imagen Max BrainAi. All rights reserved.
         </div>
       </div>
     </footer>

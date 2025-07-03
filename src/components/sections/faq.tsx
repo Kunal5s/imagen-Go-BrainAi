@@ -1,3 +1,4 @@
+
 import {
   Accordion,
   AccordionContent,
@@ -7,44 +8,28 @@ import {
 
 const faqs = [
   {
-    question: "What is Imagen Go BrainAi?",
-    answer: "Imagen Go BrainAi is an advanced AI image generation platform that allows you to create high-quality, unique images from text prompts. It's designed for artists, designers, and creatives of all levels."
+    question: "What is Imagen Max BrainAi?",
+    answer: "Imagen Max BrainAi is an advanced AI platform that allows you to create high-quality, unique images and videos from text prompts. It's designed for artists, designers, and creatives of all levels."
   },
   {
     question: "What can I create with it?",
-    answer: "You can create anything you can imagine! From realistic portraits and landscapes to fantasy art, product mockups, and abstract designs. Our AI understands a wide variety of styles and concepts."
+    answer: "You can create anything you can imagine! From realistic portraits and landscapes to fantasy art, and even short video clips. Our platform gives you access to a wide variety of specialized AI models."
   },
   {
-    question: "Is there a free trial?",
-    answer: "We have a Free plan that allows you to explore the interface, but you will need to upgrade to a paid plan to receive credits and generate images."
+    question: "Is there a free plan?",
+    answer: "Yes, our Free plan is perfect for trying out the platform. It includes a limited number of generation credits per month. For more advanced use, you can upgrade to our Pro or Mega plans."
   },
   {
-    question: "What payment methods do you accept?",
-    answer: "We accept all major credit cards, including Visa, Mastercard, and American Express. All payments are processed securely."
+    question: "What models can I use?",
+    answer: "We provide access to a curated list of powerful, open-source image and video models via the Replicate API, including Stable Diffusion XL, Zeroscope, AnimateDiff, and more."
   },
   {
-    question: "Can I cancel my subscription at any time?",
-    answer: "Yes, you can cancel your monthly subscription at any time. You will retain access to your plan's credits until the end of the current 30-day cycle. Booster Pack credits do not expire."
+    question: "Can I use the generated media for commercial purposes?",
+    answer: "Yes, images and videos created under our Pro and Mega plans come with a commercial use license. The Free plan is for personal use only."
   },
   {
-    question: "How many images are generated per prompt?",
-    answer: "Our platform generates five unique image variations for every prompt you enter. This gives you a range of options to choose from and helps you find the perfect visual representation of your idea faster."
-  },
-  {
-    question: "What image resolutions are supported?",
-    answer: "Our plans support various resolutions. The Pro plan provides HD (2K) quality, while our Mega plan provides up to 4K Ultra-High Quality for crystal-clear, professional-grade images."
-  },
-  {
-    question: "Can I use the generated images for commercial purposes?",
-    answer: "Yes! Images created under our Pro and Mega plans come with a commercial use license, allowing you to use them in your projects, for marketing, on products, and more."
-  },
-  {
-    question: "How does the credit system work?",
-    answer: "Credits are used to pay for image generations. Each model (Google Imagen 3, Pollinations) has a different cost per generation. Paid plans provide you with a monthly allowance of credits for each model, and you can purchase Booster Packs if you need more."
-  },
-  {
-    question: "Do you store my generated images?",
-    answer: "The application does not currently store your generated images in a personal gallery. You should download any images you wish to keep immediately after they are generated."
+    question: "Do you store my generated images and videos?",
+    answer: "The application does not currently store your generated media in a personal gallery. You should download any images or videos you wish to keep immediately after they are generated."
   }
 ]
 

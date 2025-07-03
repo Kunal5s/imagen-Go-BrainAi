@@ -24,7 +24,7 @@ export default function ContactPage() {
               <div>
                 <h3 className="text-xl font-semibold">Email Us</h3>
                 <p className="text-muted-foreground">For support, media inquiries, or general questions.</p>
-                <a href="mailto:support@imagengo.com" className="text-primary hover:underline">support@imagengo.com</a>
+                <a href="mailto:support@imagenmax.com" className="text-primary hover:underline">support@imagenmax.com</a>
               </div>
             </div>
             <div className="flex items-start gap-4">

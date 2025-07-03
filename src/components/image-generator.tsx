@@ -30,8 +30,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Textarea } from "@/components/ui/textarea";
-import { ImageIcon, Sparkles, Wand2, Loader2, Download, Video, Clapperboard } from 'lucide-react';
+import { ImageIcon, Sparkles, Wand2, Loader2, Download, Video, Clapperboard, Palette, AspectRatio, Smile, Sun, Gem } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from "@/hooks/use-toast";
 import { generateMedia, MediaGenerationOutput } from "@/ai/flows/image-generation-flow";
@@ -40,6 +41,12 @@ import { cn } from '@/lib/utils';
 const formSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
   model: z.string().min(1, 'Please select a model.'),
+  artisticStyle: z.string().optional(),
+  aspectRatio: z.string().optional(),
+  mood: z.string().optional(),
+  lighting: z.string().optional(),
+  colorPalette: z.string().optional(),
+  quality: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -57,9 +64,16 @@ const videoModels = [
     { name: 'Zeroscope v2 XL', id: 'anotherjesse/zeroscope-v2-xl:9f747673945c62801b13b84701c783929c0ee784e4748103455d22b6c4215f93' },
     { name: 'AnimateDiff', id: 'lucataco/animate-diff:beecf59c4aee8d81bf34deacbedae75d9863e44928b341076f6d83393c049845' },
     { name: 'Stable Video Diffusion', id: 'stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb472816fd4af51f3149fa7a9e0b5ffcf1b8172638'},
-    { name: 'Deforum', id: 'deforum/deforum_api:03defb35a89e34c3c3165b43729d7d0a2def3c329b3a58e6047ac657738a1663' },
-    { name: 'I2VGen-XL', id: 'ali-vilab/i2vgen-xl:5821a338d0246a6d89f8c16454d48a2fd3ddf4350003b578c2e648174780562e' },
 ]
+
+const creativeOptions = {
+    artisticStyle: ['Photographic', 'Cinematic', 'Anime', 'Fantasy Art', '3D Render', 'Pixel Art'],
+    aspectRatio: ['Square (1:1)', 'Portrait (2:3)', 'Widescreen (16:9)'],
+    mood: ['Default', 'Mysterious', 'Happy', 'Dramatic', 'Peaceful', 'Energetic'],
+    lighting: ['Default', 'Cinematic', 'Natural', 'Studio', 'Dramatic', 'Soft'],
+    colorPalette: ['Default', 'Vibrant', 'Monochrome', 'Pastel', 'Warm Tones', 'Cool Tones'],
+    quality: ['Standard (1080p)', 'HD (2K)', 'Ultra HD (4K)'],
+}
 
 export default function ImageGenerator() {
   const [generatedMedia, setGeneratedMedia] = useState<MediaGenerationOutput | null>(null);
@@ -73,6 +87,12 @@ export default function ImageGenerator() {
     defaultValues: {
       prompt: 'A majestic lion wearing a crown, sitting on a throne in a cosmic library.',
       model: imageModels[0].id,
+      artisticStyle: 'Photographic',
+      aspectRatio: 'Square (1:1)',
+      mood: 'Mysterious',
+      lighting: 'Default',
+      colorPalette: 'Default',
+      quality: 'Standard (1080p)',
     },
   });
 
@@ -89,6 +109,12 @@ export default function ImageGenerator() {
           prompt: values.prompt,
           model: values.model,
           type: generationType,
+          artisticStyle: values.artisticStyle,
+          aspectRatio: values.aspectRatio,
+          mood: values.mood,
+          lighting: values.lighting,
+          colorPalette: values.colorPalette,
+          quality: values.quality,
       });
       setGeneratedMedia(result);
       toast({
@@ -111,9 +137,6 @@ export default function ImageGenerator() {
     if (downloading) return;
     setDownloading(url);
     try {
-      // Using a proxy is often required to bypass CORS issues for cross-origin fetches.
-      // For simplicity here, we'll try a direct fetch which may work in some environments
-      // but in a real-world scenario, a server-side proxy endpoint for downloads is more robust.
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -166,10 +189,11 @@ export default function ImageGenerator() {
                   name="prompt"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-semibold">Your Prompt</FormLabel>
+                      <FormLabel className="font-semibold">Enter your prompt</FormLabel>
+                       <FormDescription>Describe the image you want to create in detail.</FormDescription>
                       <FormControl>
                         <Textarea
-                          placeholder="A majestic lion wearing a crown..."
+                          placeholder="A majestic lion wearing a crown, sitting on a throne in a cosmic library."
                           className="min-h-[120px] resize-none"
                           {...field}
                         />
@@ -194,15 +218,87 @@ export default function ImageGenerator() {
                     </FormItem>
                 )} />
 
+                <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+                  <AccordionItem value="item-1">
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        <span className="font-semibold">Creative Tools</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      <FormField control={form.control} name="artisticStyle" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><Wand2 className="h-4 w-4" /> Artistic Style</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                  <SelectContent>{creativeOptions.artisticStyle.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                              </Select><FormMessage />
+                          </FormItem>
+                      )} />
+
+                      <FormField control={form.control} name="aspectRatio" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><AspectRatio className="h-4 w-4" /> Aspect Ratio</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                  <SelectContent>{creativeOptions.aspectRatio.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                              </Select><FormMessage />
+                          </FormItem>
+                      )} />
+
+                      <FormField control={form.control} name="mood" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><Smile className="h-4 w-4" /> Mood</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                  <SelectContent>{creativeOptions.mood.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                              </Select><FormMessage />
+                          </FormItem>
+                      )} />
+                      
+                      <FormField control={form.control} name="lighting" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><Sun className="h-4 w-4" /> Lighting</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                  <SelectContent>{creativeOptions.lighting.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                              </Select><FormMessage />
+                          </FormItem>
+                      )} />
+
+                      <FormField control={form.control} name="colorPalette" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><Palette className="h-4 w-4" /> Color Palette</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                  <SelectContent>{creativeOptions.colorPalette.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                              </Select><FormMessage />
+                          </FormItem>
+                      )} />
+
+                      <FormField control={form.control} name="quality" render={({ field }) => (
+                          <FormItem>
+                              <FormLabel className="font-normal flex items-center gap-2 text-sm"><Gem className="h-4 w-4" /> Quality</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                                  <SelectContent>{creativeOptions.quality.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                              </Select><FormMessage />
+                          </FormItem>
+                      )} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
+
               </CardContent>
-              <CardFooter className="flex-col items-stretch gap-4">
-                <Button type="submit" disabled={isGenerateDisabled} size="lg">
+              <CardFooter className="flex gap-2 pt-6">
+                <Button type="submit" disabled={isGenerateDisabled} size="lg" className="flex-grow">
                   {isLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                       <Wand2 className="mr-2 h-4 w-4" />
                   )}
-                  {isLoading ? 'Generating...' : `Generate`}
+                  {isLoading ? 'Generating...' : `Generate 4 Images`}
+                </Button>
+                <Button type="button" variant="outline" size="lg" disabled={isLoading}>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Suggest Prompts
                 </Button>
               </CardFooter>
             </form>
@@ -250,7 +346,7 @@ export default function ImageGenerator() {
                   onClick={() => {
                       if (generatedMedia?.url) {
                         const extension = generatedMedia.type === 'image' ? 'png' : 'mp4';
-                        const filename = `imagen-go-brainai-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}.${extension}`;
+                        const filename = `imagen-max-brainai-${form.getValues('prompt').replace(/\s+/g, '-').toLowerCase().slice(0, 20)}.${extension}`;
                         handleDownload(generatedMedia.url, filename);
                       }
                   }}
@@ -264,9 +360,9 @@ export default function ImageGenerator() {
               </div>
             ) : (
                <div className="flex flex-col h-full items-center justify-center text-muted-foreground p-8">
-                  <Sparkles className="h-16 w-16 mb-4" />
-                  <p className="font-semibold text-lg">Your creations will appear here.</p>
-                  <p className="text-sm max-w-xs">Enter a prompt and choose a model to begin.</p>
+                  <ImageIcon className="h-20 w-20 mb-4 text-muted-foreground/50" />
+                  <p className="font-semibold text-lg">Your generated images will appear here.</p>
+                  <p className="text-sm max-w-xs text-center">Enter a prompt above and click "Generate" to begin.</p>
               </div>
             )}
           </div>

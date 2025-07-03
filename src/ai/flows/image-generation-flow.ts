@@ -14,6 +14,12 @@ const MediaGenerationInputSchema = z.object({
   prompt: z.string().min(1, 'Prompt is required.'),
   model: z.string().min(1, 'Model is required.'),
   type: z.enum(['image', 'video']),
+  artisticStyle: z.string().optional(),
+  aspectRatio: z.string().optional(),
+  mood: z.string().optional(),
+  lighting: z.string().optional(),
+  colorPalette: z.string().optional(),
+  quality: z.string().optional(),
 });
 export type MediaGenerationInput = z.infer<typeof MediaGenerationInputSchema>;
 
@@ -29,9 +35,25 @@ const replicate = new Replicate({
 
 export async function generateMedia(input: MediaGenerationInput): Promise<MediaGenerationOutput> {
     try {
+        const creativeModifiers = [
+            input.artisticStyle,
+            input.mood,
+            input.lighting,
+            input.colorPalette,
+            input.aspectRatio,
+            input.quality,
+        ]
+        .filter(Boolean)
+        .filter(val => val !== 'Default')
+        .join(', ');
+
+        const fullPrompt = creativeModifiers 
+            ? `${input.prompt}, in a ${creativeModifiers} style`
+            : input.prompt;
+
         const output = await replicate.run(input.model as `${string}/${string}:${string}`, {
           input: {
-            prompt: input.prompt,
+            prompt: fullPrompt,
           }
         });
         

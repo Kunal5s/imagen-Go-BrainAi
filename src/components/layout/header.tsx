@@ -23,7 +23,7 @@ export default function Header() {
         <div className="container flex h-16 max-w-7xl items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 font-bold mr-4">
             <BrainCircuit className="h-6 w-6" />
-            <span className="hidden sm:inline-block text-lg">Imagen Go BrainAi</span>
+            <span className="hidden sm:inline-block text-lg">Imagen Max BrainAi</span>
             <span className="sm:hidden text-lg whitespace-nowrap">BrainAi</span>
           </Link>
           
@@ -49,7 +49,7 @@ export default function Header() {
                     <div className="flex items-center p-4 border-b">
                       <Link href="/" className="flex items-center gap-2 font-bold" onClick={() => setIsMobileMenuOpen(false)}>
                         <BrainCircuit className="h-6 w-6" />
-                        <span>Imagen Go BrainAi</span>
+                        <span>Imagen Max BrainAi</span>
                       </Link>
                     </div>
                     <nav className="flex flex-col gap-4 p-4">

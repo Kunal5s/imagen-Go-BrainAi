@@ -10,9 +10,9 @@ function HeroSection() {
     return (
         <section className="text-center py-12 md:py-20">
             <div className="container mx-auto px-4">
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Imagen Go BrainAi</h1>
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Imagen Max BrainAi</h1>
                 <p className="max-w-3xl mx-auto text-muted-foreground mt-4 text-base md:text-lg">
-                    Welcome to the future of digital artistry. Imagen Go BrainAi is a state-of-the-art platform that transforms your text prompts into breathtaking, high-quality images and videos in seconds.
+                    Welcome to the future of digital artistry. Imagen Max BrainAi is a state-of-the-art platform that transforms your text prompts into breathtaking, high-quality images and videos in seconds.
                 </p>
                 <p className="max-w-3xl mx-auto text-muted-foreground mt-4 text-base md:text-lg">
                     Our advanced AI understands a vast range of styles, moods, and compositions, giving you unparalleled control to bring your imagination to life. Whether you're a professional designer, a creative hobbyist, or just curious, our tools are designed for you.
@@ -48,7 +48,7 @@ function WhyChooseSection() {
         <section className="py-12 md:py-20 bg-secondary">
             <div className="container mx-auto px-4">
                 <div className="text-center max-w-3xl mx-auto">
-                    <h2 className="text-3xl md:text-4xl font-bold">Why Choose Imagen Go BrainAi?</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold">Why Choose Imagen Max BrainAi?</h2>
                     <p className="mt-4 text-muted-foreground text-lg">
                         Our platform is built to empower your creativity with speed, variety, and precision. We provide the tools you need to not just generate content, but to craft visual stories.
                     </p>
