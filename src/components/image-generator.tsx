@@ -64,13 +64,13 @@ type FormValues = z.infer<typeof formSchema>;
 type GenerationType = 'image' | 'video';
 
 const imageModels = [
-    { name: 'SDXL Turbo (Fast)', id: 'stability-ai/sdxl-turbo:a4355a4c22a72ea2d67a2166a882146b99d53c23946c1e053c07e0344d5d959e' },
+    { name: 'SDXL Turbo (Very Fast)', id: 'stability-ai/sdxl-turbo:a4355a4c22a72ea2d67a2166a882146b99d53c23946c1e053c07e0344d5d959e' },
+    { name: 'Pollinations Pix-Style (Cartoon)', id: 'pollinations/pixar-style-character:a7f5ce36603434720e03e54b676451e604f2a2491b117861362d7b539461c3bf'},
     { name: 'Playground v2.5 (Artistic)', id: 'playgroundai/playground-v2.5:5957069d0206b1e13e4a0712d3f947910166297b4b1a72e12152d1c6b127d636' },
-    { name: 'Pollinations Pix-Style', id: 'pollinations/pixar-style-character:a7f5ce36603434720e03e54b676451e604f2a2491b117861362d7b539461c3bf'},
     { name: 'Stable Diffusion XL (High Quality)', id: 'stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96e3f26ce212045d8' },
-    { name: 'Realistic Vision v6.0', id: 'sg161222/realistic-vision-v6.0-b1:5c54964a586c4764491a117376c3395669a85016834033e46c8205423f892857' },
-    { name: 'DreamShaper v8', id: 'lykon/dreamshaper-8:92209930b2c171e544605f4245701419a43fb6334635173f458e65e495a6397b' },
-    { name: 'OpenJourney', id: 'prompthero/openjourney:9936c2001faa2194a261c01381f90e65261879985476014a0a37a334592a01eb' },
+    { name: 'Realistic Vision v6.0 (Photorealistic)', id: 'sg161222/realistic-vision-v6.0-b1:5c54964a586c4764491a117376c3395669a85016834033e46c8205423f892857' },
+    { name: 'DreamShaper v8 (General Purpose)', id: 'lykon/dreamshaper-8:92209930b2c171e544605f4245701419a43fb6334635173f458e65e495a6397b' },
+    { name: 'OpenJourney (Midjourney Style)', id: 'prompthero/openjourney:9936c2001faa2194a261c01381f90e65261879985476014a0a37a334592a01eb' },
 ]
 
 const videoModels = [

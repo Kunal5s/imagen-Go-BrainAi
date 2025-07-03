@@ -25,12 +25,16 @@ const MediaGenerationOutputSchema = z.object({
 });
 export type MediaGenerationOutput = z.infer<typeof MediaGenerationOutputSchema>;
 
-const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
-});
-
 export async function generateMedia(input: MediaGenerationInput): Promise<MediaGenerationOutput> {
     try {
+        if (!process.env.REPLICATE_API_TOKEN) {
+            throw new Error('Replicate API token is not configured. Please set the REPLICATE_API_TOKEN environment variable.');
+        }
+
+        const replicate = new Replicate({
+          auth: process.env.REPLICATE_API_TOKEN,
+        });
+
         const replicateInput: { prompt: string; width?: number; height?: number } = {
           prompt: input.prompt,
         };
@@ -42,17 +46,26 @@ export async function generateMedia(input: MediaGenerationInput): Promise<MediaG
           replicateInput.height = input.height;
         }
         
+        console.log(`Running Replicate model ${input.model} with prompt: "${replicateInput.prompt}"`);
         const output = await replicate.run(input.model as `${string}/${string}:${string}`, {
           input: replicateInput
         });
         
-        if (!output || !Array.isArray(output) || output.length === 0) {
-            throw new Error('No output from Replicate model.');
+        if (!output || (Array.isArray(output) && output.length === 0)) {
+            console.error("Replicate output was empty for model:", input.model);
+            throw new Error('The AI model did not produce an output. Please try a different model or prompt.');
+        }
+
+        const resultUrl = Array.isArray(output) ? output[0] : String(output);
+
+        if (typeof resultUrl !== 'string' || !resultUrl.startsWith('http')) {
+             console.error("Replicate returned an invalid output format:", output);
+             throw new Error('The AI model returned an unexpected output format.');
         }
 
         return {
             type: input.type,
-            url: output[0],
+            url: resultUrl,
         };
 
     } catch(error) {
